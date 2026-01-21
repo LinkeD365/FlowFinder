@@ -42,17 +42,20 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
   const { vm, dvSvc, onLog } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
-      mode: "multiRow",
+      mode: "singleRow",
     };
   }, []);
-  function rowSelected(_: SelectionChangedEvent<any>): void {}
+  function rowSelected(_: SelectionChangedEvent<any>): void {
+    const selectedRows = _.api.getSelectedRows() as FlowMeta[];
+    vm.selectedFlows = selectedRows;
+    onLog(`Selected ${selectedRows.length} flows`, "info");
+  }
 
   const cols: ColDef<FlowMeta>[] = [
-    { field: "name", headerName: "Flow Name", minWidth: 200 },
-    { field: "type", headerName: "Type", minWidth: 100 },
-    { field: "category", headerName: "Category", minWidth: 100 },
-    { field: "ownerId", headerName: "Owner ID", minWidth: 150 },
-    { field: "description", headerName: "Description", minWidth: 250 },
+    { field: "name", headerName: "Flow Name", minWidth: 200, flex: 2 },
+    { field: "description", headerName: "Description", minWidth: 250, autoHeight: true, flex: 2 },
+
+    { field: "ownerName", headerName: "Primary Owner", minWidth: 150 },
     { field: "createdBy", headerName: "Created By", minWidth: 150 },
     { field: "state", headerName: "State", minWidth: 100 },
   ];

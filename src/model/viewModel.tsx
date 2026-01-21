@@ -4,7 +4,9 @@ export class ViewModel {
   flows: FlowMeta[] = [];
   solutions: SolutionMeta[] = [];
   selectedSolution: SolutionMeta | null = null;
-  selectedFlow: FlowMeta | null = null;
+  selectedFlows: FlowMeta[] | null = null;
+  coOwners: OwnerMeta[] = [];
+
   constructor() {
     makeAutoObservable(this);
   }
@@ -26,6 +28,7 @@ export class SolutionMeta {
 export class FlowMeta {
   name: string;
   id: string;
+  ownerName: string;
   ownerId: string;
   type: string;
   category: string;
@@ -36,6 +39,7 @@ export class FlowMeta {
   constructor(
     name: string,
     id: string,
+    ownerName: string,
     ownerId: string,
     type: string,
     category: string,
@@ -45,12 +49,26 @@ export class FlowMeta {
   ) {
     this.name = name;
     this.id = id;
+    this.ownerName = ownerName;
     this.ownerId = ownerId;
     this.type = type;
     this.category = category;
     this.description = description;
     this.createdBy = createdBy;
     this.state = state;
+    makeAutoObservable(this);
+  }
+}
+
+export class OwnerMeta {
+  name: string;
+  id: string;
+  type: "user" | "team";
+
+  constructor(name: string, id: string, type: "user" | "team") {
+    this.name = name;
+    this.id = id;
+    this.type = type;
     makeAutoObservable(this);
   }
 }
