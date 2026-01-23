@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
 import * as React from "react";
 
-import { SolutionMeta, ViewModel } from "../model/viewModel";
+import { SolutionMeta } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Field, SearchBox } from "@fluentui/react-components";
 
@@ -68,14 +68,14 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
       });
   };
 
-  const handleSelectItem = (id: string, name: string, uniqueName: string) => {
+  const handleSelectItem = (id: string, name: string, uniqueName: string, managed: boolean) => {
     setSelectedItem(id);
     setQuery("");
     setResults([]);
-    props.updateSelected(new SolutionMeta(name, uniqueName, id));
+    props.updateSelected(new SolutionMeta(name, uniqueName, id, managed));
   };
 
-  return (
+    return (
     <div style={{ position: "relative", width: "100%" }}>
       <Field>
         <SearchBox placeholder="Search..." value={query} onChange={(_, data) => setQuery(data.value)} />
@@ -119,7 +119,7 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
           {results.map((item) => (
             <div
               key={item.id}
-              onClick={() => handleSelectItem(item.id, item.name, item.uniqueName)}
+              onClick={() => handleSelectItem(item.id, item.name, item.uniqueName, item.managed)}
               style={{
                 cursor: "pointer",
                 backgroundColor: selectedItem === item.id ? "#f0f0f0" : "transparent",

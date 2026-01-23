@@ -6,7 +6,6 @@ import { dvService } from "../services/dataverseService";
 import {
   Button,
   Caption1,
-  Caption2,
   Drawer,
   DrawerBody,
   DrawerHeader,
@@ -72,6 +71,30 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
         });
       });
   };
+  const removeCoowner = async (owner: OwnerMeta) => {
+    console.log(`Removing co-owner: ${owner.name} (ID: ${owner.id})`);
+
+    await dvSvc
+      .removeCoOwner(vm.selectedFlows![0], owner)
+      .then(async () => {
+        onLog(`Removed co-owner: ${owner.name}`, "success");
+        window.toolboxAPI.utils.showNotification({
+          title: "Co-Owner Removed",
+          body: `Successfully removed co-owner: ${owner.name} from flow`,
+          type: "success",
+        });
+        await fetchCoOwners();
+      })
+      .catch((error) => {
+        onLog(`Error removing co-owner: ${error}`, "error");
+        window.toolboxAPI.utils.showNotification({
+          title: "Error removing co-owner",
+          body: `${error}`,
+          type: "error",
+        });
+      });
+  };
+
   return (
     <div>
       <Drawer open={drawerOpen} onOpenChange={closeDrawer} position="end">
@@ -116,7 +139,8 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
                     style={{ marginLeft: "auto" }}
                     icon={<Delete12Filled />}
                     appearance="subtle"
-                    aria-label="Remove Co-Owner"
+                    aria-label="Remove Co-Owner" 
+                    onClick={() => removeCoowner(owner)}
                   ></Button>
                 </div>
               </ListItem>

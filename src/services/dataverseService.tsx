@@ -26,10 +26,10 @@ export class dvService {
     const solutionsData = await this.dvApi.queryData(
       "solutions?$filter=(isvisible eq true) and ismanaged eq " +
         (managed ? "true" : "false") +
-        " &$select=friendlyname,uniquename&$orderby=createdon desc",
+        " &$select=friendlyname,uniquename,ismanaged&$orderby=createdon desc",
     );
     const solutions: SolutionMeta[] = (solutionsData.value as any[]).map((sol: any) => {
-      const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid);
+      const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid, sol.ismanaged);
       return solution;
     });
 
@@ -122,6 +122,7 @@ export class dvService {
     </link-entity>
     <filter>
       <condition attribute="objectid" operator="eq" value="{RECORD-ID}" />
+      <condition attribute="accessrightsmask" operator="eq" value="852023" /> // owner
     </filter>
   </entity>
 </fetch>`.replace("{RECORD-ID}", flow.id);
@@ -138,7 +139,7 @@ export class dvService {
             );
             return ownerMeta;
           });
-          resolve(owners);
+          resolve(owners.filter((o) => o.id != flow.ownerId)); // Filter out any undefined IDs
         })
         .catch((error) => {
           this.onLog(`Error fetching flows: ${error}`, "error");
@@ -205,13 +206,15 @@ export class dvService {
       }
       this.dvApi
         .queryData(
-          `solutions?$filter=contains(friendlyname,'${search}') or contains(uniquename,'${search}')&$select=friendlyname,uniquename,solutionid&$top=20`,
+          `solutions?$filter=ismanaged eq false and (contains(friendlyname,'${search}') or contains(uniquename,'${search}'))&$select=friendlyname,uniquename,solutionid,ismanaged&$top=20`,
         )
         .then((data: any) => {
-          const solutions: SolutionMeta[] = (data.value as any[]).map((sol: any) => {
-            const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid);
-            return solution;
-          });
+          const solutions: SolutionMeta[] = (data.value as any[])
+            .filter((sol: any) => sol.uniquename !== "Default")
+            .map((sol: any) => {
+              const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid, sol.ismanaged);
+              return solution;
+            });
           resolve(solutions);
         })
         .catch((error) => {
@@ -225,9 +228,6 @@ export class dvService {
       if (!this.connection) {
         reject(new Error("No connection available"));
       }
-      // {"Target":{"workflowid":"d317b510-25c9-f011-bbd2-000d3a3b0c90","@odata.type":"Microsoft.Dynamics.CRM.workflow"},"PrincipalAccess":
-      // {"AccessMask":"ReadAccess, WriteAccess, AppendAccess, AppendToAccess, CreateAccess, DeleteAccess, ShareAccess, AssignAccess",
-      //   "Principal":{"ownerid":"42dc72e5-cdf5-ef11-be1f-7c1e5246193e","@odata.type":"Microsoft.Dynamics.CRM.systemuser"}}}
       const grantPayload = {
         Target: { workflowid: flow.id, "@odata.type": "Microsoft.Dynamics.CRM.workflow" },
         PrincipalAccess: {
@@ -255,6 +255,34 @@ export class dvService {
     });
   }
 
+  async removeCoOwner(flow: FlowMeta, owner: OwnerMeta): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if (!this.connection) {
+        reject(new Error("No connection available"));
+      }
+      const revokePayload = {
+        Target: { workflowid: flow.id, "@odata.type": "Microsoft.Dynamics.CRM.workflow" },
+        Revokee: {
+          ownerid: owner.id,
+          "@odata.type": owner.type === "user" ? "Microsoft.Dynamics.CRM.systemuser" : "Microsoft.Dynamics.CRM.team",
+        },
+      };
+      const request: DataverseAPI.ExecuteRequest = {
+        operationName: "RevokeAccess",
+        operationType: "action",
+        parameters: revokePayload,
+      };
+      await this.dvApi
+        .execute(request)
+        .then(() => {
+          resolve();
+        })
+        .catch((error: Error) => {
+          reject(error);
+        });
+    });
+  }
+
   async getFlowSolutions(flow: FlowMeta): Promise<SolutionMeta[]> {
     this.onLog(`Fetching solutions for flow: ${flow?.name ?? "All Flows"}`, "info");
     return new Promise<SolutionMeta[]>(async (resolve, reject) => {
@@ -266,6 +294,10 @@ export class dvService {
     <attribute name="friendlyname" />
     <attribute name="uniquename" />
     <attribute name="solutionid" />
+    <attribute name="ismanaged" />
+    <filter>
+      <condition attribute="uniquename" operator="ne" value="Default" />
+    </filter>
     <link-entity name="solutioncomponent" from="solutionid" to="solutionid" alias="sc">
       <filter>
         <condition attribute="objectid" operator="eq" value="{RECORD-ID}" />
@@ -273,11 +305,13 @@ export class dvService {
     </link-entity>
   </entity>
 </fetch>`.replace("{RECORD-ID}", flow.id);
+      console.log("FetchXML for flow solutions: ", fetchXml);
       await this.dvApi
         .fetchXmlQuery(fetchXml)
         .then((solutionsData) => {
+          console.log("Fetched flow solutions data: ", solutionsData);
           const solutions: SolutionMeta[] = (solutionsData.value as any[]).map((sol: any) => {
-            const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid);
+            const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid, sol.ismanaged);
             return solution;
           });
           resolve(solutions);
@@ -299,6 +333,7 @@ export class dvService {
         SolutionUniqueName: solution.uniqueName,
         ComponentType: 29, // Workflow component type
         ComponentId: flow.id,
+        AddRequiredComponents: false,
       };
 
       console.log("Add to solution payload: ", addToSolutionpayload);
@@ -308,6 +343,33 @@ export class dvService {
         operationType: "action",
         parameters: addToSolutionpayload,
       };
+      await this.dvApi
+        .execute(request)
+        .then(() => {
+          resolve();
+        })
+        .catch((error: Error) => {
+          reject(error);
+        });
+    });
+  }
+
+  async removeSolution(flow: FlowMeta, solution: SolutionMeta): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+      if (!this.connection) {
+        reject(new Error("No connection available"));
+      }
+      const removeFromSolutionpayload = {
+        SolutionUniqueName: solution.uniqueName,
+        ComponentType: 29, // Workflow component type
+        SolutionComponent: { solutioncomponentid: flow.id },
+      };
+      const request: DataverseAPI.ExecuteRequest = {
+        operationName: "RemoveSolutionComponent",
+        operationType: "action",
+        parameters: removeFromSolutionpayload,
+      };
+      console.log("Remove from solution payload: ", request);
       await this.dvApi
         .execute(request)
         .then(() => {

@@ -1,12 +1,11 @@
 import React from "react";
 
 import { observer } from "mobx-react";
-import { OwnerMeta, SolutionMeta, ViewModel } from "../model/viewModel";
+import { SolutionMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import {
   Button,
   Caption1,
-  Caption2,
   Drawer,
   DrawerBody,
   DrawerHeader,
@@ -14,8 +13,7 @@ import {
   List,
   ListItem,
 } from "@fluentui/react-components";
-import { Delete12Filled, Dismiss24Regular, PeopleTeam16Filled, Person12Filled } from "@fluentui/react-icons";
-import { SearchBoxCtl } from "./SeachBox";
+import { Delete12Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import { SearchSolution } from "./SeachSolutions";
 
 interface SolutionsDrawerProps {
@@ -32,13 +30,13 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
     if (vm.selectedFlows && vm.selectedFlows.length == 1) {
       await dvSvc
         .getFlowSolutions(vm.selectedFlows[0])
-        .then((owners) => {
-          setFlowSolutions(owners);
+        .then((solutions) => {
+          setFlowSolutions(solutions);
         })
         .catch((error) => {
-          onLog(`Error fetching co-owners: ${error}`, "error");
+          onLog(`Error fetching solutions: ${error}`, "error");
           window.toolboxAPI.utils.showNotification({
-            title: "Error fetching co-owners",
+            title: "Error fetching solutions",
             body: `${error}`,
             type: "error",
           });
@@ -73,6 +71,30 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
         });
       });
   };
+  const removeSolution = async (solution: SolutionMeta) => {
+    console.log(`Removing solution: ${solution.name} (ID: ${solution.id})`);
+
+    await dvSvc
+      .removeSolution(vm.selectedFlows![0], solution)
+      .then(async () => {
+        onLog(`Removed solution: ${solution.name}`, "success");
+        window.toolboxAPI.utils.showNotification({
+          title: "Solution Removed",
+          body: `Successfully removed solution: ${solution.name} from flow`,
+          type: "success",
+        });
+        await fetchSolutions();
+      })
+      .catch((error) => {
+        onLog(`Error removing solution: ${error}`, "error");
+        window.toolboxAPI.utils.showNotification({
+          title: "Error removing solution from Flow",
+          body: `${error}`,
+          type: "error",
+        });
+      });
+  };
+
   return (
     <div>
       <Drawer open={drawerOpen} onOpenChange={closeDrawer} position="end">
@@ -122,6 +144,7 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
                     icon={<Delete12Filled />}
                     appearance="subtle"
                     aria-label="Remove Co-Owner"
+                    onClick={() => removeSolution(solution)}
                   ></Button>
                 </div>
               </ListItem>

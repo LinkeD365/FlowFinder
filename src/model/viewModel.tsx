@@ -16,11 +16,13 @@ export class SolutionMeta {
   name: string;
   uniqueName: string;
   id: string;
+  managed: boolean = false;
 
-  constructor(name: string, uniqueName: string, id: string) {
+  constructor(name: string, uniqueName: string, id: string, managed: boolean) {
     this.name = name;
     this.uniqueName = uniqueName;
     this.id = id;
+    this.managed = managed;
     makeAutoObservable(this);
   }
 }
@@ -35,6 +37,8 @@ export class FlowMeta {
   description: string;
   createdBy: string;
   state: string;
+  solutions: SolutionMeta[] = [];
+  coOwners: OwnerMeta[] = [];
 
   constructor(
     name: string,
