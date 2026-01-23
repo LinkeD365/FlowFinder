@@ -29,11 +29,10 @@ function useDebounce(cb: string, delay: number) {
 }
 
 export const SearchBoxCtl = observer((props: SearchBoxProps): React.JSX.Element => {
-  const { dvSvc, vm, selected, onLog } = props;
+  const { dvSvc, vm, onLog } = props;
 
   const [query, setQuery] = React.useState("");
   const [loadingText, setLoadingText] = React.useState("Loading...");
-  const [debounceVal, setDebounceVal] = React.useState("");
 
   const [results, setResults] = React.useState<OwnerMeta[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -41,15 +40,14 @@ export const SearchBoxCtl = observer((props: SearchBoxProps): React.JSX.Element 
   const debounceValue = useDebounce(query, 300);
 
   React.useEffect(() => {
-    if (query || query.length >= 1) {
-      console.log("Debounced:", query);
+    if (query && query.length >= 1) {
+      onLog(`Debounced search query: ${query}`, "info");
       searchOwners(query);
-      setDebounceVal(query);
     }
   }, [debounceValue]);
 
   const searchOwners = async (searchQuery: string) => {
-    console.log(`Searching for owners with query: ${searchQuery}`);
+    onLog(`Searching for owners with query: ${searchQuery}`, "info");
     setQuery(searchQuery);
     setIsLoading(true);
     setLoadingText("Searching...");

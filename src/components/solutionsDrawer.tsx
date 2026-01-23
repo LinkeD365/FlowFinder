@@ -27,7 +27,7 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
   const { dvSvc, vm, drawerOpen, closeDrawer, onLog } = props;
   const [flowSolutions, setFlowSolutions] = React.useState<SolutionMeta[]>([]);
   const fetchSolutions = async () => {
-    if (vm.selectedFlows && vm.selectedFlows.length == 1) {
+    if (vm.selectedFlows && vm.selectedFlows.length === 1) {
       await dvSvc
         .getFlowSolutions(vm.selectedFlows[0])
         .then((solutions) => {
@@ -49,10 +49,17 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
   }, [vm.selectedFlows]);
 
   const solutionSelected = async (solution: SolutionMeta) => {
-    console.log(`Solution selected: ${solution.name} (ID: ${solution.id})`);
+    onLog(`Solution selected: ${solution.name} (ID: ${solution.id})`, "info");
+
+    if (!vm.selectedFlows || vm.selectedFlows.length === 0) {
+      onLog("No flow is currently selected. Cannot add solution.", "error");
+      return;
+    }
+
+    const selectedFlow = vm.selectedFlows[0];
 
     await dvSvc
-      .addSolution(vm.selectedFlows![0], solution)
+      .addSolution(selectedFlow, solution)
       .then(async () => {
         onLog(`Added solution: ${solution.name}`, "success");
         window.toolboxAPI.utils.showNotification({
@@ -72,10 +79,16 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
       });
   };
   const removeSolution = async (solution: SolutionMeta) => {
-    console.log(`Removing solution: ${solution.name} (ID: ${solution.id})`);
+    onLog(`Removing solution: ${solution.name} (ID: ${solution.id})`, "info");
+
+    const selectedFlow = vm.selectedFlows && vm.selectedFlows.length > 0 ? vm.selectedFlows[0] : undefined;
+    if (!selectedFlow) {
+      onLog("No flow selected when attempting to remove solution.", "error");
+      return;
+    }
 
     await dvSvc
-      .removeSolution(vm.selectedFlows![0], solution)
+      .removeSolution(selectedFlow, solution)
       .then(async () => {
         onLog(`Removed solution: ${solution.name}`, "success");
         window.toolboxAPI.utils.showNotification({
