@@ -32,7 +32,6 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
 
   const [query, setQuery] = React.useState("");
   const [loadingText, setLoadingText] = React.useState("Loading...");
-  const [_debounceVal, setDebounceVal] = React.useState("");
 
   const [results, setResults] = React.useState<SolutionMeta[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -40,15 +39,14 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
   const debounceValue = useDebounce(query, 300);
 
   React.useEffect(() => {
-    if (query || query.length >= 1) {
-      console.log("Debounced:", query);
+    if (query && query.length >= 1) {
+      onLog(`Debounced search query: ${query}`, "info");
       searchSolutions(query);
-      setDebounceVal(query);
     }
   }, [debounceValue]);
 
   const searchSolutions = async (searchQuery: string) => {
-    console.log(`Searching for solutions with query: ${searchQuery}`);
+    onLog(`Searching for solutions with query: ${searchQuery}`, "info");
     setQuery(searchQuery);
     setIsLoading(true);
     setLoadingText("Searching...");

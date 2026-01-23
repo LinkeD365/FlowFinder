@@ -3,11 +3,9 @@ import React from "react";
 import { observer } from "mobx-react";
 import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup, Tooltip } from "@fluentui/react-components";
+import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
 import {
-  FontIncrease24Regular,
   FontDecrease24Regular,
-  TextFont24Regular,
   PeopleLockFilled,
   BoxRegular,
 } from "@fluentui/react-icons";
@@ -76,11 +74,11 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         <ToolbarButton
           icon={<PeopleLockFilled />}
           onClick={() => SetCoownerOpen(true)}
-          disabled={!vm.selectedFlows || vm.selectedFlows.length === 0}
+          disabled={vm.selectedFlows?.length !== 1}
         >
           Manage Co-Owners
         </ToolbarButton>
-        <ToolbarButton icon={<BoxRegular />} onClick={() => SetSolutionOpen(true)} disabled={!vm.selectedFlows || vm.selectedFlows.length === 0}>
+        <ToolbarButton icon={<BoxRegular />} onClick={() => SetSolutionOpen(true)} disabled={vm.selectedFlows?.length !== 1}>
           Manage Solutions
         </ToolbarButton>
       </ToolbarGroup>

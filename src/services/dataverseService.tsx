@@ -18,7 +18,6 @@ export class dvService {
 
   async getSolutions(managed: boolean): Promise<SolutionMeta[]> {
     this.onLog("Fetching solutions...", "info");
-    console.log("Fetching solutions, connection: ", this.connection);
     if (!this.connection) {
       throw new Error("No connection available");
     }
@@ -78,7 +77,6 @@ export class dvService {
       await this.dvApi
         .fetchXmlQuery(fetchXml)
         .then((flowsData) => {
-          console.log("Fetched flows data: ", flowsData);
           const flows: FlowMeta[] = (flowsData.value as any[]).map((flow: any) => {
             const flowMeta = new FlowMeta(
               flow.name,
@@ -103,7 +101,7 @@ export class dvService {
   }
 
   async getCoOwners(flow: FlowMeta): Promise<OwnerMeta[]> {
-    this.onLog(`Fetching flows for solution: ${flow?.name ?? "All Solutions"}`, "info");
+    this.onLog(`Fetching co-owners for flow: ${flow?.name}`, "info");
     return new Promise<OwnerMeta[]>(async (resolve, reject) => {
       if (!this.connection) {
         throw new Error("No connection available");
@@ -122,12 +120,10 @@ export class dvService {
     </link-entity>
     <filter>
       <condition attribute="objectid" operator="eq" value="{RECORD-ID}" />
-      <condition attribute="accessrightsmask" operator="eq" value="852023" /> // owner
+      <condition attribute="accessrightsmask" operator="eq" value="852023" />
     </filter>
   </entity>
 </fetch>`.replace("{RECORD-ID}", flow.id);
-      console.log("FetchXML for co-owners: ", fetchXml);
-      //const url = `workflows?$filter=(solutionid eq ${solution.id})&$select=name,workflowid,ownerid,type,category,description,createdby,statecode&$orderby=createdon desc`;
       await this.dvApi
         .fetchXmlQuery(fetchXml)
         .then((ownersData) => {
@@ -153,9 +149,9 @@ export class dvService {
       if (!this.connection) {
         reject(new Error("No connection available"));
       }
-      console.log(`systemusers?$filter=contains(fullname,'${search}')&$select=fullname,systemuserid&$top=10`);
+      const escapedSearch = search.replace(/'/g, "''");
       this.dvApi
-        .queryData(`systemusers?$filter=contains(fullname,'${search}')&$select=fullname,systemuserid&$top=10`)
+        .queryData(`systemusers?$filter=contains(fullname,'${escapedSearch}')&$select=fullname,systemuserid&$top=10`)
         .then((data: any) => {
           const users: OwnerMeta[] = (data.value as any[]).map((user: any) => {
             const owner = new OwnerMeta(user.fullname, user.systemuserid, "user");
@@ -174,8 +170,9 @@ export class dvService {
       if (!this.connection) {
         reject(new Error("No connection available"));
       }
+      const escapedSearch = search.replace(/'/g, "''");
       this.dvApi
-        .queryData(`teams?$filter=contains(name,'${search}')&$select=name,teamid&$top=10`)
+        .queryData(`teams?$filter=contains(name,'${escapedSearch}')&$select=name,teamid&$top=10`)
         .then((data: any) => {
           const teams: OwnerMeta[] = (data.value as any[]).map((team: any) => {
             const owner = new OwnerMeta(team.name, team.teamid, "team");
@@ -204,9 +201,10 @@ export class dvService {
       if (!this.connection) {
         reject(new Error("No connection available"));
       }
+      const escapedSearch = search.replace(/'/g, "''");
       this.dvApi
         .queryData(
-          `solutions?$filter=ismanaged eq false and (contains(friendlyname,'${search}') or contains(uniquename,'${search}'))&$select=friendlyname,uniquename,solutionid,ismanaged&$top=20`,
+          `solutions?$filter=ismanaged eq false and (contains(friendlyname,'${escapedSearch}') or contains(uniquename,'${escapedSearch}'))&$select=friendlyname,uniquename,solutionid,ismanaged&$top=20`,
         )
         .then((data: any) => {
           const solutions: SolutionMeta[] = (data.value as any[])
@@ -305,11 +303,9 @@ export class dvService {
     </link-entity>
   </entity>
 </fetch>`.replace("{RECORD-ID}", flow.id);
-      console.log("FetchXML for flow solutions: ", fetchXml);
       await this.dvApi
         .fetchXmlQuery(fetchXml)
         .then((solutionsData) => {
-          console.log("Fetched flow solutions data: ", solutionsData);
           const solutions: SolutionMeta[] = (solutionsData.value as any[]).map((sol: any) => {
             const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid, sol.ismanaged);
             return solution;
@@ -335,8 +331,6 @@ export class dvService {
         ComponentId: flow.id,
         AddRequiredComponents: false,
       };
-
-      console.log("Add to solution payload: ", addToSolutionpayload);
 
       const request: DataverseAPI.ExecuteRequest = {
         operationName: "AddSolutionComponent",
@@ -369,7 +363,6 @@ export class dvService {
         operationType: "action",
         parameters: removeFromSolutionpayload,
       };
-      console.log("Remove from solution payload: ", request);
       await this.dvApi
         .execute(request)
         .then(() => {

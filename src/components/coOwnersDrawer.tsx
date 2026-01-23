@@ -26,7 +26,7 @@ interface CoOwnersDrawerProps {
 export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.Element => {
   const { dvSvc, vm, drawerOpen, closeDrawer, onLog } = props;
   const fetchCoOwners = async () => {
-    if (vm.selectedFlows && vm.selectedFlows.length == 1) {
+    if (vm.selectedFlows && vm.selectedFlows.length === 1) {
       onLog(`Co-Owners Drawer opened for flow: ${vm.selectedFlows[0].name}`, "info");
       await dvSvc
         .getCoOwners(vm.selectedFlows[0])
@@ -49,10 +49,16 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
   }, [vm.selectedFlows]);
 
   const ownerSelected = async (owner: OwnerMeta) => {
-    console.log(`Owner selected: ${owner.name} (ID: ${owner.id})`);
+    onLog(`Owner selected: ${owner.name} (ID: ${owner.id})`, "info");
+
+    const selectedFlow = vm.selectedFlows && vm.selectedFlows.length > 0 ? vm.selectedFlows[0] : undefined;
+    if (!selectedFlow) {
+      onLog("No flow selected when attempting to add co-owner.", "error");
+      return;
+    }
 
     await dvSvc
-      .addCoOwner(vm.selectedFlows![0], owner)
+      .addCoOwner(selectedFlow, owner)
       .then(async () => {
         onLog(`Added co-owner: ${owner.name}`, "success");
         window.toolboxAPI.utils.showNotification({
@@ -72,10 +78,16 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
       });
   };
   const removeCoowner = async (owner: OwnerMeta) => {
-    console.log(`Removing co-owner: ${owner.name} (ID: ${owner.id})`);
+    onLog(`Removing co-owner: ${owner.name} (ID: ${owner.id})`, "info");
+
+    const selectedFlow = vm.selectedFlows && vm.selectedFlows.length > 0 ? vm.selectedFlows[0] : undefined;
+    if (!selectedFlow) {
+      onLog("No flow selected when attempting to remove co-owner.", "error");
+      return;
+    }
 
     await dvSvc
-      .removeCoOwner(vm.selectedFlows![0], owner)
+      .removeCoOwner(selectedFlow, owner)
       .then(async () => {
         onLog(`Removed co-owner: ${owner.name}`, "success");
         window.toolboxAPI.utils.showNotification({

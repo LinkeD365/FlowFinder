@@ -19,8 +19,7 @@ import {
 import { AgGridReact, CustomCellRendererProps } from "ag-grid-react";
 import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { makeObservable } from "mobx";
-import { PeopleTeam16Filled, Person12Filled, Person16Filled } from "@fluentui/react-icons";
+import { PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
 
 ModuleRegistry.registerModules([
   RowApiModule,
@@ -78,7 +77,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
                 style={{ overflow: "hidden", display: "flex", flexDirection: "row", alignItems: "center" }}
                 key={owner.id}
               >
-                {owner.type == "user" ? <Person16Filled /> : <PeopleTeam16Filled />}{" "}
+                {owner.type === "user" ? <Person16Filled /> : <PeopleTeam16Filled />}{" "}
                 <div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", marginLeft: 4 }}>
                   &nbsp;
                   {owner.name}
@@ -107,44 +106,48 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
   };
 
   React.useEffect(() => {
-    const fetchSolutionsForFlows = async () => {
-      for (const flow of vm.flows) {
-        await dvSvc.getFlowSolutions(flow).then((solutions) => {
-          flow.solutions = makeObservable(solutions);
-          if (gridRef.current) {
-            const row = gridRef.current.api.getRowNode(flow.id);
-            console.log("Updating row for flow:", flow.id, row);
+    let cancelled = false;
 
-            gridRef.current.api.getRowNode(flow.id)?.setData(flow);
+    const fetchFlowDetails = async () => {
+      // Take a snapshot of the current flows to avoid issues if vm.flows mutates while we fetch.
+      const flowsSnapshot = [...vm.flows];
+
+      await Promise.all(
+        flowsSnapshot.map(async (flow) => {
+          try {
+            const [solutions, owners] = await Promise.all([
+              dvSvc.getFlowSolutions(flow),
+              dvSvc.getCoOwners(flow),
+            ]);
+
+            if (cancelled) {
+              return;
+            }
+
+            flow.solutions = solutions;
+            flow.coOwners = owners;
+
+            if (gridRef.current) {
+              const rowNode = gridRef.current.api.getRowNode(flow.id);
+              rowNode?.setData(flow);
+            }
+          } catch (error) {
+            console.error(`Error fetching details for flow ${flow.id}:`, error);
           }
-          console.log(flow);
-        });
-      }
+        })
+      );
     };
-    fetchSolutionsForFlows();
+
+    if (vm.flows && vm.flows.length > 0) {
+      fetchFlowDetails();
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [vm.flows]);
 
   React.useEffect(() => {
-    const fetchOwners = async () => {
-      for (const flow of vm.flows) {
-        await dvSvc.getCoOwners(flow).then((owners) => {
-          flow.coOwners = makeObservable(owners);
-          if (gridRef.current) {
-            const row = gridRef.current.api.getRowNode(flow.id);
-            console.log("Updating row for flow:", flow.id, row);
-
-            gridRef.current.api.getRowNode(flow.id)?.setDataValue("coOwners", flow.coOwners);
-          }
-          console.log(flow);
-        });
-        console.log(`Flow ${flow.name} co-owners:`, flow.coOwners);
-      }
-    };
-    fetchOwners();
-  }, [vm.flows]);
-
-  React.useEffect(() => {
-    console.log("Selected solution changed:", vm.selectedSolution);
     const fetchFlows = async () => {
       if (!vm.selectedSolution) {
         vm.flows = [];
