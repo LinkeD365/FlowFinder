@@ -10,15 +10,19 @@ import {
   ColDef,
   ValidationModule,
   RowAutoHeightModule,
+  RowApiModule,
   RowSelectionOptions,
   RowSelectionModule,
   SelectionChangedEvent,
+  GetRowIdParams,
 } from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
+import { AgGridReact, CustomCellRendererProps } from "ag-grid-react";
 import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
+import { PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
 
 ModuleRegistry.registerModules([
+  RowApiModule,
   TextFilterModule,
   ClientSideRowModelModule,
   CheckboxEditorModule,
@@ -42,19 +46,55 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
   const { vm, dvSvc, onLog } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
-      mode: "multiRow",
+      mode: "singleRow",
     };
   }, []);
-  function rowSelected(_: SelectionChangedEvent<any>): void {}
+  const gridRef = React.useRef<AgGridReact>(null);
 
   const cols: ColDef<FlowMeta>[] = [
-    { field: "name", headerName: "Flow Name", minWidth: 200 },
-    { field: "type", headerName: "Type", minWidth: 100 },
-    { field: "category", headerName: "Category", minWidth: 100 },
-    { field: "ownerId", headerName: "Owner ID", minWidth: 150 },
-    { field: "description", headerName: "Description", minWidth: 250 },
+    { field: "name", headerName: "Flow Name", minWidth: 200, flex: 2 },
+    { field: "description", headerName: "Description", minWidth: 250, autoHeight: true, flex: 2 },
+
+    { field: "ownerName", headerName: "Primary Owner", minWidth: 150 },
     { field: "createdBy", headerName: "Created By", minWidth: 150 },
     { field: "state", headerName: "State", minWidth: 100 },
+    {
+      headerName: "Solutions",
+      field: "solutions",
+      filter: false,
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
+        return <>{params.data?.solutions.map((sol) => sol.name).join(", ") ?? ""}</>;
+      },
+    },
+    {
+      headerName: "Co-Owners",
+      field: "coOwners",
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
+        return (
+          <>
+            {params.data?.coOwners.map((owner) => (
+              <div
+                style={{ overflow: "hidden", display: "flex", flexDirection: "row", alignItems: "center" }}
+                key={owner.id}
+              >
+                {owner.type === "user" ? <Person16Filled /> : <PeopleTeam16Filled />}{" "}
+                <div style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", marginLeft: 4 }}>
+                  &nbsp;
+                  {owner.name}
+                </div>
+              </div>
+            )) ?? ""}
+          </>
+        );
+      },
+    },
+    {
+      headerName: "Is Managed",
+      filter: false,
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
+        return <>{params.data?.solutions.some((sol) => sol.managed) ? "Yes" : "No"}</>;
+      },
+    },
   ];
   const defaultColDef: ColDef = {
     sortable: true,
@@ -64,8 +104,50 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     wrapText: true,
     width: 100,
   };
+
   React.useEffect(() => {
-    console.log("Selected solution changed:", vm.selectedSolution);
+    let cancelled = false;
+
+    const fetchFlowDetails = async () => {
+      // Take a snapshot of the current flows to avoid issues if vm.flows mutates while we fetch.
+      const flowsSnapshot = [...vm.flows];
+
+      await Promise.all(
+        flowsSnapshot.map(async (flow) => {
+          try {
+            const [solutions, owners] = await Promise.all([
+              dvSvc.getFlowSolutions(flow),
+              dvSvc.getCoOwners(flow),
+            ]);
+
+            if (cancelled) {
+              return;
+            }
+
+            flow.solutions = solutions;
+            flow.coOwners = owners;
+
+            if (gridRef.current) {
+              const rowNode = gridRef.current.api.getRowNode(flow.id);
+              rowNode?.setData(flow);
+            }
+          } catch (error) {
+            console.error(`Error fetching details for flow ${flow.id}:`, error);
+          }
+        })
+      );
+    };
+
+    if (vm.flows && vm.flows.length > 0) {
+      fetchFlowDetails();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [vm.flows]);
+
+  React.useEffect(() => {
     const fetchFlows = async () => {
       if (!vm.selectedSolution) {
         vm.flows = [];
@@ -82,10 +164,18 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     };
     fetchFlows();
   }, [vm.selectedSolution]);
-
+  const getRowId = React.useCallback((params: GetRowIdParams<FlowMeta>) => {
+    return params.data.id;
+  }, []);
+  function rowSelected(_: SelectionChangedEvent<any>): void {
+    const selectedRows = _.api.getSelectedRows() as FlowMeta[];
+    vm.selectedFlows = selectedRows;
+    onLog(`Selected ${selectedRows.length} flows`, "info");
+  }
   return (
     <div style={{ width: "100%", height: "85vh" }}>
       <AgGridReact<FlowMeta>
+        ref={gridRef}
         suppressFieldDotNotation
         rowData={vm.flows}
         columnDefs={cols}
@@ -93,6 +183,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
         domLayout="normal"
         defaultColDef={defaultColDef}
         rowSelection={rowSelection}
+        getRowId={getRowId}
         onSelectionChanged={rowSelected}
       />
     </div>
