@@ -5,7 +5,6 @@ import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
 import {
-  FontDecrease24Regular,
   PeopleLockFilled,
   BoxRegular,
 } from "@fluentui/react-icons";
@@ -54,6 +53,16 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     >
       <ToolbarGroup>
         <Combobox placeholder="Select a Solution" inlinePopup listbox={{ style: { zIndex: 20 } }}>
+          <Option
+            key="all-solutions"
+            text="All Solutions"
+            onClick={() => {
+              vm.selectedSolution = null;
+              getAllFlows();
+            }}
+          >
+            All Solutions
+          </Option>
           {vm.solutions.map((solution) => (
             <Option
               key={solution.id}
@@ -66,8 +75,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
             </Option>
           ))}
         </Combobox>
-        <ToolbarButton icon={<FontDecrease24Regular />} aria-label="All Flows" onClick={getAllFlows}>
-          All Flows
+        <ToolbarButton aria-label="List Cloud Flows" onClick={getAllFlows}>
+          List Cloud Flows
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarGroup>

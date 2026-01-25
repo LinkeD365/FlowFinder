@@ -150,7 +150,6 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
   React.useEffect(() => {
     const fetchFlows = async () => {
       if (!vm.selectedSolution) {
-        vm.flows = [];
         return;
       }
       try {
