@@ -108,21 +108,34 @@ export class dvService {
         throw new Error("No connection available");
       }
 
-      const request: DataverseAPI.ExecuteRequest = {
-        entityName: "workflow",
-        entityId: flow.id,
-        operationName: "RetrieveSharedPrincipalsAndAccess",
-        operationType: "function",
-      };
+      const fetchXml = `<fetch>
+  <entity name="workflow">
+    <filter>
+      <condition attribute="workflowid" operator="eq" value="${flow.id}" />
+    </filter>
+    <link-entity name="principalobjectaccess" from="objectid" to="workflowid" alias="poa">
+      <attribute name="principalid" />
+      <filter>
+        <condition attribute="accessrightsmask" operator="eq" value="852023" />
+      </filter>
+      <link-entity name="systemuser" from="systemuserid" to="principalid" link-type="outer" alias="u">
+        <attribute name="fullname" />
+      </link-entity>
+      <link-entity name="team" from="teamid" to="principalid" link-type="outer" alias="t">
+        <attribute name="name" />
+      </link-entity>
+    </link-entity>
+  </entity>
+</fetch>`;
 
       await this.dvApi
-        .execute(request)
+        .fetchXmlQuery(fetchXml)
         .then((response: any) => {
-          const owners = (response.PrincipalAccesses as any[]).map((principalAccess: any) => {
+          const owners = (response.value as any[]).map((record: any) => {
             const ownerMeta = new OwnerMeta(
-              principalAccess.Principal.fullname || principalAccess.Principal.name,
-              principalAccess.Principal.ownerid,
-              principalAccess.Principal["@odata.type"] === "Microsoft.Dynamics.CRM.systemuser" ? "user" : "team",
+              record["u.fullname"] || record["t.name"],
+              record["poa.principalid"],
+              record["u.fullname"] ? "user" : "team",
             );
             return ownerMeta;
           });
@@ -286,6 +299,7 @@ export class dvService {
     <attribute name="ismanaged" />
     <filter>
       <condition attribute="uniquename" operator="ne" value="Default" />
+      <condition attribute="uniquename" operator="ne" value="Active" />
     </filter>
     <link-entity name="solutioncomponent" from="solutionid" to="solutionid" alias="sc">
       <filter>
