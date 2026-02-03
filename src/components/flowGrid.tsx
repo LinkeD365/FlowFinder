@@ -150,6 +150,11 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
   React.useEffect(() => {
     const fetchFlows = async () => {
       if (!vm.selectedSolution) {
+        // Clear flows (and any selected flows) when no solution is selected to avoid stale data in the grid.
+        vm.flows = [];
+        if (vm.selectedFlows) {
+          vm.selectedFlows = [];
+        }
         return;
       }
       try {
