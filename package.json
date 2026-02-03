@@ -17,7 +17,7 @@
   "configurations": {
     "repository": "https://github.com/LinkeD365/FlowFinder",
     "website": "",
-    "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/PPTB-EnvManager/refs/heads/main/README.md",
+    "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/main/README.md",
     "iconUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/main/assets/Icon.png"
   },
   "license": "MIT",
