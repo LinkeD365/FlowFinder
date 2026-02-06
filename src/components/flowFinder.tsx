@@ -54,7 +54,6 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
             key="all-solutions"
             text="All Solutions"
             onClick={() => {
-              vm.selectedSolution = null;
               getAllFlows();
             }}
           >
