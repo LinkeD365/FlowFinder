@@ -4,11 +4,7 @@ import { observer } from "mobx-react";
 import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
-import {
-  FontDecrease24Regular,
-  PeopleLockFilled,
-  BoxRegular,
-} from "@fluentui/react-icons";
+import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
@@ -54,6 +50,16 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     >
       <ToolbarGroup>
         <Combobox placeholder="Select a Solution" inlinePopup listbox={{ style: { zIndex: 20 } }}>
+          <Option
+            key="all-solutions"
+            text="All Solutions"
+            onClick={() => {
+              vm.selectedSolution = null;
+              getAllFlows();
+            }}
+          >
+            All Solutions
+          </Option>
           {vm.solutions.map((solution) => (
             <Option
               key={solution.id}
@@ -66,8 +72,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
             </Option>
           ))}
         </Combobox>
-        <ToolbarButton icon={<FontDecrease24Regular />} aria-label="All Flows" onClick={getAllFlows}>
-          All Flows
+        <ToolbarButton aria-label="All Cloud Flows" onClick={getAllFlows}>
+          All Cloud Flows
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarGroup>
@@ -78,7 +84,11 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         >
           Manage Co-Owners
         </ToolbarButton>
-        <ToolbarButton icon={<BoxRegular />} onClick={() => SetSolutionOpen(true)} disabled={vm.selectedFlows?.length !== 1}>
+        <ToolbarButton
+          icon={<BoxRegular />}
+          onClick={() => SetSolutionOpen(true)}
+          disabled={vm.selectedFlows?.length !== 1}
+        >
           Manage Solutions
         </ToolbarButton>
       </ToolbarGroup>

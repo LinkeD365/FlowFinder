@@ -4,7 +4,22 @@
   "displayName": "FlowFinder",
   "description": "A Power Platform Tool Box tool",
   "main": "index.html",
-  "author": "Power Platform ToolBox",
+  "contributors": [
+    {
+      "name": "LinkeD365",
+      "url": "https://linked365.blog"
+    },
+    {
+      "name": "Matt Collins-Jones",
+      "url": "https://www.collinsjones.dev"
+    }
+  ],
+  "configurations": {
+    "repository": "https://github.com/LinkeD365/FlowFinder",
+    "website": "",
+    "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/main/README.md",
+    "iconUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/main/assets/Icon.png"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

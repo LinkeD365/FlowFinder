@@ -25,7 +25,7 @@ export class dvService {
     const solutionsData = await this.dvApi.queryData(
       "solutions?$filter=(isvisible eq true) and ismanaged eq " +
         (managed ? "true" : "false") +
-        " &$select=friendlyname,uniquename,ismanaged&$orderby=createdon desc",
+        " and (friendlyname ne 'Default' and friendlyname ne 'Common Data Service Default Solution') &$select=friendlyname,uniquename,ismanaged&$orderby=createdon desc",
     );
     const solutions: SolutionMeta[] = (solutionsData.value as any[]).map((sol: any) => {
       const solution = new SolutionMeta(sol.friendlyname, sol.uniquename, sol.solutionid, sol.ismanaged);
@@ -53,6 +53,7 @@ export class dvService {
         "    <attribute name='createdby'/>",
         "    <attribute name='statecode'/>",
         "    <attribute name='workflowid'/>",
+        "    <order attribute='name' descending='false' />",
         "    <filter>",
         "      <condition attribute='type' operator='eq' value='1'/>",
         "      <condition attribute='category' operator='eq' value='5'/>",
@@ -107,38 +108,41 @@ export class dvService {
         throw new Error("No connection available");
       }
 
-      let fetchXml = `<fetch>
-  <entity name="principalobjectaccess">
-    <attribute name="objectid" />
-    <attribute name="accessrightsmask" />
-    <attribute name="principalid" />
-    <link-entity name="systemuser" from="systemuserid" to="principalid" link-type="outer" alias="u">
-      <attribute name="fullname" alias="user" />
-    </link-entity>
-    <link-entity name="team" from="teamid" to="principalid" link-type="outer" alias="t">
-      <attribute name="name" alias="team" />
-    </link-entity>
+      const fetchXml = `<fetch>
+  <entity name="workflow">
     <filter>
-      <condition attribute="objectid" operator="eq" value="{RECORD-ID}" />
-      <condition attribute="accessrightsmask" operator="eq" value="852023" />
+      <condition attribute="workflowid" operator="eq" value="${flow.id}" />
     </filter>
+    <link-entity name="principalobjectaccess" from="objectid" to="workflowid" alias="poa">
+      <attribute name="principalid" />
+      <filter>
+        <condition attribute="accessrightsmask" operator="eq" value="852023" />
+      </filter>
+      <link-entity name="systemuser" from="systemuserid" to="principalid" link-type="outer" alias="u">
+        <attribute name="fullname" />
+      </link-entity>
+      <link-entity name="team" from="teamid" to="principalid" link-type="outer" alias="t">
+        <attribute name="name" />
+      </link-entity>
+    </link-entity>
   </entity>
-</fetch>`.replace("{RECORD-ID}", flow.id);
+</fetch>`;
+
       await this.dvApi
         .fetchXmlQuery(fetchXml)
-        .then((ownersData) => {
-          const owners = (ownersData.value as any[]).map((owner: any) => {
+        .then((response: any) => {
+          const owners = (response.value as any[]).map((record: any) => {
             const ownerMeta = new OwnerMeta(
-              owner["user"] || owner["team"],
-              owner["principalid"],
-              owner["user"] ? "user" : "team",
+              record["u.fullname"] || record["t.name"],
+              record["poa.principalid"],
+              record["u.fullname"] ? "user" : "team",
             );
             return ownerMeta;
           });
-          resolve(owners.filter((o) => o.id != flow.ownerId)); // Filter out any undefined IDs
+          resolve(owners.filter((o) => o.id != flow.ownerId)); // Filter out the primary owner
         })
         .catch((error) => {
-          this.onLog(`Error fetching flows: ${error}`, "error");
+          this.onLog(`Error fetching co-owners: ${error}`, "error");
           reject(error);
         });
     });
@@ -295,6 +299,7 @@ export class dvService {
     <attribute name="ismanaged" />
     <filter>
       <condition attribute="uniquename" operator="ne" value="Default" />
+      <condition attribute="uniquename" operator="ne" value="Active" />
     </filter>
     <link-entity name="solutioncomponent" from="solutionid" to="solutionid" alias="sc">
       <filter>
