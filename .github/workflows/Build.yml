@@ -3,7 +3,7 @@ name: Build & Publish to npm
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: ["master"]
     paths-ignore:
       - 'docs/**'
       - '**.md'
