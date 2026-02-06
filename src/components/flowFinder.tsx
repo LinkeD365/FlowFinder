@@ -4,10 +4,7 @@ import { observer } from "mobx-react";
 import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
-import {
-  PeopleLockFilled,
-  BoxRegular,
-} from "@fluentui/react-icons";
+import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
@@ -75,8 +72,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
             </Option>
           ))}
         </Combobox>
-        <ToolbarButton aria-label="List Cloud Flows" onClick={getAllFlows}>
-          List Cloud Flows
+        <ToolbarButton aria-label="All Cloud Flows" onClick={getAllFlows}>
+          All Cloud Flows
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarGroup>
@@ -87,7 +84,11 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         >
           Manage Co-Owners
         </ToolbarButton>
-        <ToolbarButton icon={<BoxRegular />} onClick={() => SetSolutionOpen(true)} disabled={vm.selectedFlows?.length !== 1}>
+        <ToolbarButton
+          icon={<BoxRegular />}
+          onClick={() => SetSolutionOpen(true)}
+          disabled={vm.selectedFlows?.length !== 1}
+        >
           Manage Solutions
         </ToolbarButton>
       </ToolbarGroup>
