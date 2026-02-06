@@ -1,6 +1,6 @@
 {
   "name": "pptb-flowfinder",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "displayName": "FlowFinder",
   "description": "A Power Platform Tool Box tool",
   "main": "index.html",
