@@ -1,6 +1,6 @@
 {
   "name": "@linked365/pptb-flowfinder",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "displayName": "FlowFinder",
   "description": "A Power Platform Tool Box tool to help you find and manage your Power Automate flows.",
   "main": "index.html",
