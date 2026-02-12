@@ -43,7 +43,7 @@ export class dvService {
       }
 
       let fetchXml = [
-        "<fetch top='50'>",
+        "<fetch>",
         "  <entity name='workflow'>",
         "    <attribute name='category'/>",
         "    <attribute name='name'/>",
@@ -53,6 +53,7 @@ export class dvService {
         "    <attribute name='createdby'/>",
         "    <attribute name='statecode'/>",
         "    <attribute name='workflowid'/>",
+        "     <attribute name='clientdata'/>",
         "    <order attribute='name' descending='false' />",
         "    <filter>",
         "      <condition attribute='type' operator='eq' value='1'/>",
@@ -89,6 +90,7 @@ export class dvService {
               flow.description,
               flow["_createdby_value@OData.Community.Display.V1.FormattedValue"],
               flow["statecode@OData.Community.Display.V1.FormattedValue"],
+              flow.clientdata,
             );
             return flowMeta;
           });

@@ -15,11 +15,13 @@ import {
   RowSelectionModule,
   SelectionChangedEvent,
   GetRowIdParams,
+  QuickFilterModule,
 } from "ag-grid-community";
 import { AgGridReact, CustomCellRendererProps } from "ag-grid-react";
 import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
+import { JsonViewer } from "./jsonViewer";
 
 ModuleRegistry.registerModules([
   RowApiModule,
@@ -30,6 +32,7 @@ ModuleRegistry.registerModules([
   ValidationModule,
   RowAutoHeightModule,
   RowSelectionModule,
+  QuickFilterModule,
 ]);
 
 const agTheme = themeQuartz.withParams({
@@ -40,16 +43,24 @@ interface FlowGridProps {
   vm: ViewModel;
   dvSvc: dvService;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+  searchQuery?: string;
 }
 
 export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
-  const { vm, dvSvc, onLog } = props;
+  const { vm, dvSvc, onLog, searchQuery } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
       mode: "singleRow",
     };
   }, []);
   const gridRef = React.useRef<AgGridReact>(null);
+
+  // Apply quick filter when search query changes
+  React.useEffect(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.setGridOption("quickFilterText", searchQuery || "");
+    }
+  }, [searchQuery]);
 
   const cols: ColDef<FlowMeta>[] = [
     { field: "name", headerName: "Flow Name", minWidth: 200, flex: 2 },
@@ -95,6 +106,17 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
         return <>{params.data?.solutions.some((sol) => sol.managed) ? "Yes" : "No"}</>;
       },
     },
+    {
+      headerName: "Definition",
+      field: "flowDefinition",
+      filter: false,
+      minWidth: 150,
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
+        return (
+          <JsonViewer json={params.data?.flowDefinition || ""} title={`Flow Definition: ${params.data?.name || ""}`} />
+        );
+      },
+    },
   ];
   const defaultColDef: ColDef = {
     sortable: true,
@@ -115,10 +137,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
       await Promise.all(
         flowsSnapshot.map(async (flow) => {
           try {
-            const [solutions, owners] = await Promise.all([
-              dvSvc.getFlowSolutions(flow),
-              dvSvc.getCoOwners(flow),
-            ]);
+            const [solutions, owners] = await Promise.all([dvSvc.getFlowSolutions(flow), dvSvc.getCoOwners(flow)]);
 
             if (cancelled) {
               return;
@@ -134,7 +153,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
           } catch (error) {
             console.error(`Error fetching details for flow ${flow.id}:`, error);
           }
-        })
+        }),
       );
     };
 

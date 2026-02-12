@@ -3,7 +3,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
+import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup, SearchBox } from "@fluentui/react-components";
 import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
@@ -18,6 +18,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
   const { dvSvc, vm, onLog } = props;
   const [coownerOpen, SetCoownerOpen] = React.useState<boolean>(false);
   const [solutionOpen, SetSolutionOpen] = React.useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
 
   React.useEffect(() => {
     const fetchSolutions = async () => {
@@ -76,6 +77,12 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarGroup>
+        <SearchBox
+          placeholder="Search all..."
+          value={searchQuery}
+          onChange={(_, data) => setSearchQuery(data.value)}
+          style={{ minWidth: "200px" }}
+        />
         <ToolbarButton
           icon={<PeopleLockFilled />}
           onClick={() => SetCoownerOpen(true)}
@@ -98,7 +105,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     <div>
       <div style={{ zIndex: 1 }}>{toolBar}</div>
       <div>
-        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} />
+        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} />
         {coownerOpen && (
           <CoOwnersDrawer
             dvSvc={dvSvc}

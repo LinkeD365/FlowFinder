@@ -39,6 +39,7 @@ export class FlowMeta {
   state: string;
   solutions: SolutionMeta[] = [];
   coOwners: OwnerMeta[] = [];
+  flowDefinition: string;
 
   constructor(
     name: string,
@@ -50,6 +51,7 @@ export class FlowMeta {
     description: string,
     createdBy: string,
     state: string,
+    flowDefinition: string,
   ) {
     this.name = name;
     this.id = id;
@@ -60,6 +62,7 @@ export class FlowMeta {
     this.description = description;
     this.createdBy = createdBy;
     this.state = state;
+    this.flowDefinition = flowDefinition;
     makeAutoObservable(this);
   }
 }
