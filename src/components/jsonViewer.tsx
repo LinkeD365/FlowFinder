@@ -10,16 +10,23 @@ import {
   Button,
 } from "@fluentui/react-components";
 import { Code16Regular } from "@fluentui/react-icons";
+import ReactJsonView from "@microlink/react-json-view";
+import { ViewModel } from "../model/viewModel";
+import { observer } from "mobx-react";
 
 interface JsonViewerProps {
   json: string;
   title?: string;
+  vm: ViewModel;
 }
 
-export const JsonViewer: React.FC<JsonViewerProps> = ({ json, title = "JSON Viewer" }) => {
+export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element => {
+  const { json, title = "JSON Viewer", vm } = props;
   const [open, setOpen] = React.useState(false);
   const [formattedJson, setFormattedJson] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
+  const [theme, setTheme] = React.useState<string>(vm?.theme || "light");
+  const jsonObj = json ? JSON.parse(json) : {};
 
   const formatJson = () => {
     try {
@@ -55,11 +62,11 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ json, title = "JSON View
       <DialogSurface style={{ maxWidth: "80vw", maxHeight: "80vh" }}>
         <DialogBody>
           <DialogTitle>{title}</DialogTitle>
-          <DialogContent style={{ overflow: "auto", maxHeight: "60vh" }}>
+          <DialogContent style={{ overflow: "auto", height: "60vh" }}>
             {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
             <pre
               style={{
-                backgroundColor: "#f5f5f5",
+                backgroundColor: theme === "dark" ? "#1e1e1e" : "#f5f5f5",
                 padding: "16px",
                 borderRadius: "4px",
                 overflow: "auto",
@@ -69,7 +76,14 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ json, title = "JSON View
                 border: "1px solid #ddd",
               }}
             >
-              {formattedJson || json}
+              <ReactJsonView
+                src={jsonObj}
+                name={false}
+                collapsed={10}
+                enableClipboard={false}
+                displayDataTypes={false}
+                theme={theme === "dark" ? "threezerotwofour" : "rjv-default"}
+              />
             </pre>
           </DialogContent>
           <DialogActions>
@@ -84,4 +98,4 @@ export const JsonViewer: React.FC<JsonViewerProps> = ({ json, title = "JSON View
       </DialogSurface>
     </Dialog>
   );
-};
+});

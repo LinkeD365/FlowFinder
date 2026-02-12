@@ -6,7 +6,7 @@ export class ViewModel {
   selectedSolution: SolutionMeta | null = null;
   selectedFlows: FlowMeta[] | null = null;
   coOwners: OwnerMeta[] = [];
-
+  theme: string = "light";
   constructor() {
     makeAutoObservable(this);
   }
@@ -64,6 +64,26 @@ export class FlowMeta {
     this.state = state;
     this.flowDefinition = flowDefinition;
     makeAutoObservable(this);
+  }
+
+  getTriggerText(): string {
+    try {
+      const definition =
+        typeof this.flowDefinition === "string" ? JSON.parse(this.flowDefinition) : this.flowDefinition;
+
+      // Check if triggers exist in definition.definition.triggers or definition.triggers
+      const triggers = definition?.properties?.definition?.triggers || definition?.triggers;
+      console.log("Parsed triggers:", definition, triggers);
+      if (triggers && typeof triggers === "object") {
+        const triggerNames = Object.keys(triggers);
+        if (triggerNames.length > 0) {
+          return triggerNames[0]; // Return the first trigger name
+        }
+      }
+      return "No Trigger";
+    } catch (error) {
+      return "Error Reading Trigger";
+    }
   }
 }
 

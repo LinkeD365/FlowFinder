@@ -22,6 +22,7 @@ import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
 import { JsonViewer } from "./jsonViewer";
+import { Caption1 } from "@fluentui/react-components";
 
 ModuleRegistry.registerModules([
   RowApiModule,
@@ -70,6 +71,14 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     { field: "createdBy", headerName: "Created By", minWidth: 150 },
     { field: "state", headerName: "State", minWidth: 100 },
     {
+      headerName: "Trigger",
+      field: "flowDefinition",
+      minWidth: 180,
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
+        return <>{params.data?.getTriggerText()}</>;
+      },
+    },
+    {
       headerName: "Solutions",
       field: "solutions",
       filter: false,
@@ -113,7 +122,11 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
       minWidth: 150,
       cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
         return (
-          <JsonViewer json={params.data?.flowDefinition || ""} title={`Flow Definition: ${params.data?.name || ""}`} />
+          <JsonViewer
+            json={params.data?.flowDefinition || ""}
+            title={`Flow Definition: ${params.data?.name || ""}`}
+            vm={vm}
+          />
         );
       },
     },
@@ -166,6 +179,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     };
   }, [vm.flows]);
 
+  const NoRowsOverlay = () => <Caption1>No flows available</Caption1>;
   React.useEffect(() => {
     const fetchFlows = async () => {
       if (!vm.selectedSolution) {
@@ -208,6 +222,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
         rowSelection={rowSelection}
         getRowId={getRowId}
         onSelectionChanged={rowSelected}
+        noRowsOverlayComponent={NoRowsOverlay}
       />
     </div>
   );
