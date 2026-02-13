@@ -78,7 +78,7 @@ export class FlowMeta {
 
       // Check if triggers exist in definition.definition.triggers or definition.triggers
       const triggers = definition?.properties?.definition?.triggers || definition?.triggers;
-      
+
       if (triggers && typeof triggers === "object") {
         const triggerNames = Object.keys(triggers);
         if (triggerNames.length > 0) {
