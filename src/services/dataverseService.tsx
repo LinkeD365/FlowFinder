@@ -93,7 +93,7 @@ export class dvService {
               flow.description,
               flow["_createdby_value@OData.Community.Display.V1.FormattedValue"],
               flow["statecode@OData.Community.Display.V1.FormattedValue"],
-              flow.clientdata,
+              flow.clientdata ?? "",
             );
             return flowMeta;
           });

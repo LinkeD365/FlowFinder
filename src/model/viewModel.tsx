@@ -73,10 +73,10 @@ export class FlowMeta {
     }
 
     try {
-      const definition =
-        typeof this.flowDefinition === "string" ? JSON.parse(this.flowDefinition) : this.flowDefinition;
+      const definition = JSON.parse(this.flowDefinition);
 
-      // Check if triggers exist in definition.definition.triggers or definition.triggers
+      // Check if triggers exist in definition.properties.definition.triggers (current schema)
+      // or in definition.triggers (legacy/alternative schema)
       const triggers = definition?.properties?.definition?.triggers || definition?.triggers;
 
       if (triggers && typeof triggers === "object") {
