@@ -87,6 +87,7 @@ function App() {
           if (_data && _data.theme) {
             document.body.setAttribute("data-theme", _data.theme);
             document.body.setAttribute("data-ag-theme-mode", _data.theme);
+            vm.theme = _data.theme;
             setTheme(_data.theme);
           }
           break;
@@ -106,23 +107,12 @@ function App() {
       const currentTheme = await window.toolboxAPI.utils.getCurrentTheme();
       document.body.setAttribute("data-theme", currentTheme);
       document.body.setAttribute("data-ag-theme-mode", currentTheme);
+      vm.theme = currentTheme;
       setTheme(currentTheme);
     })();
     addLog("FlowFinder initialized", "success");
   }, [addLog]);
 
-  // Get theme from Toolbox API
-  useEffect(() => {
-    const getTheme = async () => {
-      try {
-        const currentTheme = await window.toolboxAPI.utils.getCurrentTheme();
-        setTheme(currentTheme === "dark" ? "dark" : "light");
-      } catch (error) {
-        console.error("Error getting theme:", error);
-      }
-    };
-    getTheme();
-  }, []);
   const [vm] = useState(() => new ViewModel());
   const dvSvc = useMemo(() => {
     if (!connection) return null;
