@@ -6,7 +6,7 @@ export class ViewModel {
   selectedSolution: SolutionMeta | null = null;
   selectedFlows: FlowMeta[] | null = null;
   coOwners: OwnerMeta[] = [];
-
+  theme: string = "light";
   constructor() {
     makeAutoObservable(this);
   }
@@ -39,6 +39,8 @@ export class FlowMeta {
   state: string;
   solutions: SolutionMeta[] = [];
   coOwners: OwnerMeta[] = [];
+  flowDefinition: string;
+  private _cachedTriggerText?: string;
 
   constructor(
     name: string,
@@ -50,6 +52,7 @@ export class FlowMeta {
     description: string,
     createdBy: string,
     state: string,
+    flowDefinition: string,
   ) {
     this.name = name;
     this.id = id;
@@ -60,7 +63,35 @@ export class FlowMeta {
     this.description = description;
     this.createdBy = createdBy;
     this.state = state;
+    this.flowDefinition = flowDefinition;
     makeAutoObservable(this);
+  }
+
+  getTriggerText(): string {
+    if (this._cachedTriggerText !== undefined) {
+      return this._cachedTriggerText;
+    }
+
+    try {
+      const definition = JSON.parse(this.flowDefinition);
+
+      // Check if triggers exist in definition.properties.definition.triggers (current schema)
+      // or in definition.triggers (legacy/alternative schema)
+      const triggers = definition?.properties?.definition?.triggers || definition?.triggers;
+
+      if (triggers && typeof triggers === "object") {
+        const triggerNames = Object.keys(triggers);
+        if (triggerNames.length > 0) {
+          this._cachedTriggerText = triggerNames[0]; // Cache the first trigger name
+          return this._cachedTriggerText;
+        }
+      }
+      this._cachedTriggerText = "No Trigger";
+      return this._cachedTriggerText;
+    } catch (error) {
+      this._cachedTriggerText = "Error Reading Trigger";
+      return this._cachedTriggerText;
+    }
   }
 }
 
