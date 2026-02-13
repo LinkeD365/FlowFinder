@@ -27,28 +27,16 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
   const [error, setError] = React.useState<string>("");
   const theme = vm?.theme || "light";
   
-  // Memoize parsed JSON only when dialog is open
-  const jsonObj = React.useMemo(() => {
+  // Memoize parsed JSON and parse error only when dialog is open
+  const { jsonObj, parseError } = React.useMemo(() => {
     if (!open || !json) {
-      return {};
+      return { jsonObj: {}, parseError: "" };
     }
     try {
-      return JSON.parse(json);
+      const parsed = JSON.parse(json);
+      return { jsonObj: parsed, parseError: "" };
     } catch (err) {
-      return {};
-    }
-  }, [json, open]);
-
-  // Compute parse error only when dialog is open
-  const parseError = React.useMemo(() => {
-    if (!open || !json) {
-      return "";
-    }
-    try {
-      JSON.parse(json);
-      return "";
-    } catch (err) {
-      return "Invalid JSON format";
+      return { jsonObj: {}, parseError: "Invalid JSON format" };
     }
   }, [json, open]);
 
