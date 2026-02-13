@@ -29,7 +29,10 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
   
   // Memoize parsed JSON and parse error only when dialog is open
   const { jsonObj, parseError } = React.useMemo(() => {
-    if (!open || !json) {
+    if (!json) {
+      return { jsonObj: {}, parseError: "" };
+    }
+    if (!open) {
       return { jsonObj: {}, parseError: "" };
     }
     try {
@@ -88,9 +91,13 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
       textarea.style.left = "-9999px";
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand("copy");
+      const success = document.execCommand("copy");
       document.body.removeChild(textarea);
-      setError("");
+      if (!success) {
+        setError("Failed to copy to clipboard");
+      } else {
+        setError("");
+      }
     } catch {
       setError("Clipboard not supported in this environment");
     }
