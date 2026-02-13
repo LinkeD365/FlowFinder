@@ -27,15 +27,30 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
   const [error, setError] = React.useState<string>("");
   const theme = vm?.theme || "light";
   
-  // Safely parse JSON with error handling
-  let jsonObj = {};
-  let parseError = "";
-  try {
-    jsonObj = json ? JSON.parse(json) : {};
-  } catch (err) {
-    parseError = "Invalid JSON format";
-    jsonObj = {};
-  }
+  // Memoize parsed JSON only when dialog is open
+  const jsonObj = React.useMemo(() => {
+    if (!open || !json) {
+      return {};
+    }
+    try {
+      return JSON.parse(json);
+    } catch (err) {
+      return {};
+    }
+  }, [json, open]);
+
+  // Compute parse error only when dialog is open
+  const parseError = React.useMemo(() => {
+    if (!open || !json) {
+      return "";
+    }
+    try {
+      JSON.parse(json);
+      return "";
+    } catch (err) {
+      return "Invalid JSON format";
+    }
+  }, [json, open]);
 
   const formatJson = () => {
     try {
@@ -57,8 +72,40 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
     setOpen(true);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(formattedJson || json);
+  const copyToClipboard = async () => {
+    const textToCopy = formattedJson || json;
+
+    if (!textToCopy) {
+      setError("No JSON data available to copy");
+      return;
+    }
+
+    // Use Clipboard API when available
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        // Clear any previous error on successful copy
+        setError("");
+      } catch {
+        setError("Failed to copy to clipboard");
+      }
+      return;
+    }
+
+    // Fallback for environments without Clipboard API
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = textToCopy;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setError("");
+    } catch {
+      setError("Clipboard not supported in this environment");
+    }
   };
 
   return (
