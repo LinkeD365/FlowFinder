@@ -42,6 +42,9 @@ export class dvService {
         throw new Error("No connection available");
       }
 
+      // Note: Including clientdata in the query can significantly increase payload size
+      // and impact initial load performance. Consider lazy-loading this data only when
+      // the JSON viewer is opened for a specific flow if performance issues are observed.
       let fetchXml = [
         "<fetch>",
         "  <entity name='workflow'>",

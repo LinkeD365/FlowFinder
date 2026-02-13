@@ -40,6 +40,7 @@ export class FlowMeta {
   solutions: SolutionMeta[] = [];
   coOwners: OwnerMeta[] = [];
   flowDefinition: string;
+  private _cachedTriggerText?: string;
 
   constructor(
     name: string,
@@ -67,22 +68,29 @@ export class FlowMeta {
   }
 
   getTriggerText(): string {
+    if (this._cachedTriggerText !== undefined) {
+      return this._cachedTriggerText;
+    }
+
     try {
       const definition =
         typeof this.flowDefinition === "string" ? JSON.parse(this.flowDefinition) : this.flowDefinition;
 
       // Check if triggers exist in definition.definition.triggers or definition.triggers
       const triggers = definition?.properties?.definition?.triggers || definition?.triggers;
-      console.log("Parsed triggers:", definition, triggers);
+
       if (triggers && typeof triggers === "object") {
         const triggerNames = Object.keys(triggers);
         if (triggerNames.length > 0) {
-          return triggerNames[0]; // Return the first trigger name
+          this._cachedTriggerText = triggerNames[0]; // Cache the first trigger name
+          return this._cachedTriggerText;
         }
       }
-      return "No Trigger";
+      this._cachedTriggerText = "No Trigger";
+      return this._cachedTriggerText;
     } catch (error) {
-      return "Error Reading Trigger";
+      this._cachedTriggerText = "Error Reading Trigger";
+      return this._cachedTriggerText;
     }
   }
 }

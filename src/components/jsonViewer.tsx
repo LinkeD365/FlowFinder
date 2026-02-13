@@ -25,8 +25,17 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
   const [open, setOpen] = React.useState(false);
   const [formattedJson, setFormattedJson] = React.useState<string>("");
   const [error, setError] = React.useState<string>("");
-  const [theme, setTheme] = React.useState<string>(vm?.theme || "light");
-  const jsonObj = json ? JSON.parse(json) : {};
+  const theme = vm?.theme || "light";
+  
+  // Safely parse JSON with error handling
+  let jsonObj = {};
+  let parseError = "";
+  try {
+    jsonObj = json ? JSON.parse(json) : {};
+  } catch (err) {
+    parseError = "Invalid JSON format";
+    jsonObj = {};
+  }
 
   const formatJson = () => {
     try {
@@ -63,7 +72,7 @@ export const JsonViewer = observer((props: JsonViewerProps): React.JSX.Element =
         <DialogBody>
           <DialogTitle>{title}</DialogTitle>
           <DialogContent style={{ overflow: "auto", height: "60vh" }}>
-            {error && <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>}
+            {(error || parseError) && <div style={{ color: "red", marginBottom: "10px" }}>{error || parseError}</div>}
             <pre
               style={{
                 backgroundColor: theme === "dark" ? "#1e1e1e" : "#f5f5f5",

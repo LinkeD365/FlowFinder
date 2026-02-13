@@ -113,18 +113,6 @@ function App() {
     addLog("FlowFinder initialized", "success");
   }, [addLog]);
 
-  // Get theme from Toolbox API
-  // useEffect(() => {
-  //   const getTheme = async () => {
-  //     try {
-  //       const currentTheme = await window.toolboxAPI.utils.getCurrentTheme();
-  //       setTheme(currentTheme === "dark" ? "dark" : "light");
-  //     } catch (error) {
-  //       console.error("Error getting theme:", error);
-  //     }
-  //   };
-  //   getTheme();
-  // }, []);
   const [vm] = useState(() => new ViewModel());
   const dvSvc = useMemo(() => {
     if (!connection) return null;
