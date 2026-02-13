@@ -72,11 +72,9 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     { field: "state", headerName: "State", minWidth: 100 },
     {
       headerName: "Trigger",
-      field: "flowDefinition",
       minWidth: 180,
-      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
-        return <>{params.data?.getTriggerText()}</>;
-      },
+      valueGetter: (params) => params.data?.getTriggerText() || "",
+      getQuickFilterText: (params) => params.data?.getTriggerText() || "",
     },
     {
       headerName: "Solutions",
@@ -117,9 +115,9 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     },
     {
       headerName: "Definition",
-      field: "flowDefinition",
       filter: false,
       minWidth: 150,
+      getQuickFilterText: () => "",
       cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
         return (
           <JsonViewer
