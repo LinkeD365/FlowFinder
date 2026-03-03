@@ -106,25 +106,25 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
       <div style={{ zIndex: 1 }}>{toolBar}</div>
       <div>
         <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} />
-        {coownerOpen && (
-          <CoOwnersDrawer
-            dvSvc={dvSvc}
-            vm={vm}
-            drawerOpen={coownerOpen}
-            closeDrawer={() => SetCoownerOpen(false)}
-            onLog={onLog}
-          />
-        )}
-        {solutionOpen && (
-          <SolutionsDrawer
-            dvSvc={dvSvc}
-            vm={vm}
-            drawerOpen={solutionOpen}
-            closeDrawer={() => SetSolutionOpen(false)}
-            onLog={onLog}
-          />
-        )}
       </div>
+      {coownerOpen && (
+        <CoOwnersDrawer
+          dvSvc={dvSvc}
+          vm={vm}
+          drawerOpen={coownerOpen}
+          closeDrawer={() => SetCoownerOpen(false)}
+          onLog={onLog}
+        />
+      )}
+      {solutionOpen && (
+        <SolutionsDrawer
+          dvSvc={dvSvc}
+          vm={vm}
+          drawerOpen={solutionOpen}
+          closeDrawer={() => SetSolutionOpen(false)}
+          onLog={onLog}
+        />
+      )}
     </div>
   );
 });

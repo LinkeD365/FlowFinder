@@ -126,6 +126,7 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
           </DrawerHeaderTitle>
         </DrawerHeader>
         <DrawerBody>
+          <Caption1>Flow: {vm.selectedFlows?.[0]?.name ?? "No Flow Selected"}</Caption1>
           <SearchSolution
             dvSvc={dvSvc}
             currentSolutions={flowSolutions}

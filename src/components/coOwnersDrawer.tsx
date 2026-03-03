@@ -125,6 +125,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
           </DrawerHeaderTitle>
         </DrawerHeader>
         <DrawerBody>
+          <Caption1>Flow: {vm.selectedFlows?.[0]?.name ?? "No Flow Selected"}</Caption1>
           <SearchBoxCtl dvSvc={dvSvc} vm={vm} updateSelected={ownerSelected} onLog={onLog} />
           <List>
             {vm.coOwners.map((owner) => (
@@ -151,7 +152,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
                     style={{ marginLeft: "auto" }}
                     icon={<Delete12Filled />}
                     appearance="subtle"
-                    aria-label="Remove Co-Owner" 
+                    aria-label="Remove Co-Owner"
                     onClick={() => removeCoowner(owner)}
                   ></Button>
                 </div>
