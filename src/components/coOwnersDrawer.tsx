@@ -30,6 +30,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
   const handleClose = () => {
     if (dirtyRef.current) {
       onChanged?.();
+      dirtyRef.current = false;
     }
     closeDrawer();
   };
@@ -119,7 +120,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
 
   return (
     <div>
-      <Drawer open={drawerOpen} onOpenChange={handleClose} position="end">
+      <Drawer open={drawerOpen} onOpenChange={(_, data) => { if (!data.open) { handleClose(); } }} position="end">
         <DrawerHeader>
           <DrawerHeaderTitle
             action={

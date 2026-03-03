@@ -103,13 +103,17 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
 
   const refreshGrid = async () => {
     if (!vm.selectedSolution) {
-      const flows = await dvSvc.getFlowsBySolution();
-      vm.flows = flows;
-    } else {
+      await getAllFlows();
+      return;
+    }
+
+    try {
       const flows = await dvSvc.getFlowsBySolution(vm.selectedSolution);
       vm.flows = flows;
+      onLog(`Fetched ${flows.length} flows`, "success");
+    } catch (error) {
+      onLog(`Error fetching flows for selected solution: ${error}`, "error");
     }
-      
   };
 
   return (
