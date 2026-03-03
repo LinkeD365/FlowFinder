@@ -1,6 +1,6 @@
 {
   "name": "@linked365/pptb-flowfinder",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "displayName": "FlowFinder",
   "description": "A Power Platform ToolBox tool to help you find and manage your Power Automate flows.",
   "main": "index.html",
@@ -18,7 +18,7 @@
     "repository": "https://github.com/LinkeD365/FlowFinder",
     "website": "",
     "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/README.md",
-    "iconUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/assets/icon.png"
+    "iconUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/assets/MCJ-Logo.svg"
   },
   "license": "MIT",
   "engines": {
