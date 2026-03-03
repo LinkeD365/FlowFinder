@@ -35,6 +35,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
 
   const getAllFlows = async () => {
     try {
+      vm.selectedSolution = null;
       const flows = await dvSvc.getFlowsBySolution();
       vm.flows = flows;
       onLog(`Fetched ${flows.length} flows`, "success");
