@@ -101,6 +101,17 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     </Toolbar>
   );
 
+  const refreshGrid = async () => {
+    if (!vm.selectedSolution) {
+      const flows = await dvSvc.getFlowsBySolution();
+      vm.flows = flows;
+    } else {
+      const flows = await dvSvc.getFlowsBySolution(vm.selectedSolution);
+      vm.flows = flows;
+    }
+      
+  };
+
   return (
     <div>
       <div style={{ zIndex: 1 }}>{toolBar}</div>
@@ -114,6 +125,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
           drawerOpen={coownerOpen}
           closeDrawer={() => SetCoownerOpen(false)}
           onLog={onLog}
+          onChanged={refreshGrid}
         />
       )}
       {solutionOpen && (
@@ -123,6 +135,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
           drawerOpen={solutionOpen}
           closeDrawer={() => SetSolutionOpen(false)}
           onLog={onLog}
+          onChanged={refreshGrid}
         />
       )}
     </div>

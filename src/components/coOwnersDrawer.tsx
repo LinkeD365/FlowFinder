@@ -22,9 +22,17 @@ interface CoOwnersDrawerProps {
   drawerOpen: boolean;
   closeDrawer: () => void;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+  onChanged?: () => void;
 }
 export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.Element => {
-  const { dvSvc, vm, drawerOpen, closeDrawer, onLog } = props;
+  const { dvSvc, vm, drawerOpen, closeDrawer, onLog, onChanged } = props;
+  const dirtyRef = React.useRef(false);
+  const handleClose = () => {
+    if (dirtyRef.current) {
+      onChanged?.();
+    }
+    closeDrawer();
+  };
   const fetchCoOwners = async () => {
     if (vm.selectedFlows && vm.selectedFlows.length === 1) {
       onLog(`Co-Owners Drawer opened for flow: ${vm.selectedFlows[0].name}`, "info");
@@ -66,6 +74,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
           body: `Successfully added co-owner: ${owner.name} to flow`,
           type: "success",
         });
+        dirtyRef.current = true;
         await fetchCoOwners();
       })
       .catch((error) => {
@@ -95,6 +104,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
           body: `Successfully removed co-owner: ${owner.name} from flow`,
           type: "success",
         });
+        dirtyRef.current = true;
         await fetchCoOwners();
       })
       .catch((error) => {
@@ -109,7 +119,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
 
   return (
     <div>
-      <Drawer open={drawerOpen} onOpenChange={closeDrawer} position="end">
+      <Drawer open={drawerOpen} onOpenChange={handleClose} position="end">
         <DrawerHeader>
           <DrawerHeaderTitle
             action={
@@ -117,7 +127,7 @@ export const CoOwnersDrawer = observer((props: CoOwnersDrawerProps): React.JSX.E
                 appearance="subtle"
                 aria-label="Close"
                 icon={<Dismiss24Regular />}
-                onClick={() => closeDrawer()}
+                onClick={() => handleClose()}
               />
             }
           >
