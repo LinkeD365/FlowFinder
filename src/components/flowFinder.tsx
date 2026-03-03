@@ -35,6 +35,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
 
   const getAllFlows = async () => {
     try {
+      vm.selectedSolution = null;
       const flows = await dvSvc.getFlowsBySolution();
       vm.flows = flows;
       onLog(`Fetched ${flows.length} flows`, "success");
@@ -101,30 +102,47 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     </Toolbar>
   );
 
+  const refreshGrid = async () => {
+    if (!vm.selectedSolution) {
+      await getAllFlows();
+      return;
+    }
+
+    try {
+      const flows = await dvSvc.getFlowsBySolution(vm.selectedSolution);
+      vm.flows = flows;
+      onLog(`Fetched ${flows.length} flows`, "success");
+    } catch (error) {
+      onLog(`Error fetching flows for selected solution: ${error}`, "error");
+    }
+  };
+
   return (
     <div>
       <div style={{ zIndex: 1 }}>{toolBar}</div>
       <div>
         <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} />
-        {coownerOpen && (
-          <CoOwnersDrawer
-            dvSvc={dvSvc}
-            vm={vm}
-            drawerOpen={coownerOpen}
-            closeDrawer={() => SetCoownerOpen(false)}
-            onLog={onLog}
-          />
-        )}
-        {solutionOpen && (
-          <SolutionsDrawer
-            dvSvc={dvSvc}
-            vm={vm}
-            drawerOpen={solutionOpen}
-            closeDrawer={() => SetSolutionOpen(false)}
-            onLog={onLog}
-          />
-        )}
       </div>
+      {coownerOpen && (
+        <CoOwnersDrawer
+          dvSvc={dvSvc}
+          vm={vm}
+          drawerOpen={coownerOpen}
+          closeDrawer={() => SetCoownerOpen(false)}
+          onLog={onLog}
+          onChanged={refreshGrid}
+        />
+      )}
+      {solutionOpen && (
+        <SolutionsDrawer
+          dvSvc={dvSvc}
+          vm={vm}
+          drawerOpen={solutionOpen}
+          closeDrawer={() => SetSolutionOpen(false)}
+          onLog={onLog}
+          onChanged={refreshGrid}
+        />
+      )}
     </div>
   );
 });
