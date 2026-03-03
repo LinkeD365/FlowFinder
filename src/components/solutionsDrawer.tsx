@@ -22,14 +22,14 @@ interface SolutionsDrawerProps {
   drawerOpen: boolean;
   closeDrawer: () => void;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
-  onChanged?: () => void;
+  onChanged?: () => Promise<void> | void;
 }
 export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX.Element => {
   const { dvSvc, vm, drawerOpen, closeDrawer, onLog, onChanged } = props;
   const dirtyRef = React.useRef(false);
-  const handleClose = () => {
+  const handleClose = async () => {
     if (dirtyRef.current) {
-      onChanged?.();
+      await onChanged?.();
       dirtyRef.current = false;
     }
     closeDrawer();
