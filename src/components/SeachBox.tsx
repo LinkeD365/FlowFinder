@@ -3,7 +3,7 @@ import * as React from "react";
 
 import { OwnerMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { Field, SearchBox } from "@fluentui/react-components";
+import { Field, SearchBox, tokens } from "@fluentui/react-components";
 import { PeopleTeam16Filled, Person12Filled } from "@fluentui/react-icons";
 
 type SearchBoxProps = {
@@ -88,11 +88,13 @@ export const SearchBoxCtl = observer((props: SearchBoxProps): React.JSX.Element 
             right: 0,
             maxHeight: "200px",
             overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid #ccc",
+            backgroundColor: tokens.colorNeutralBackground1,
+            border: `1px solid ${tokens.colorNeutralStroke1}`,
             borderRadius: "4px",
             zIndex: 1000,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            boxShadow: `0 4px 8px ${tokens.colorNeutralShadowAmbient}`,
+            color: tokens.colorNeutralForeground1,
+            padding: "8px",
           }}
         >
           {loadingText || "Loading..."}
@@ -108,11 +110,11 @@ export const SearchBoxCtl = observer((props: SearchBoxProps): React.JSX.Element 
             right: 0,
             maxHeight: "200px",
             overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid #ccc",
+            backgroundColor: tokens.colorNeutralBackground1,
+            border: `1px solid ${tokens.colorNeutralStroke1}`,
             borderRadius: "4px",
             zIndex: 1000,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            boxShadow: `0 4px 8px ${tokens.colorNeutralShadowAmbient}`,
           }}
         >
           {results.map((item) => (
@@ -121,9 +123,11 @@ export const SearchBoxCtl = observer((props: SearchBoxProps): React.JSX.Element 
               onClick={() => handleSelectItem(item.id, item.name, item.type)}
               style={{
                 cursor: "pointer",
-                backgroundColor: selectedItem === item.id ? "#f0f0f0" : "transparent",
+                backgroundColor: selectedItem === item.id ? tokens.colorNeutralBackground1Selected : "transparent",
                 display: "flex",
                 alignItems: "center",
+                color: tokens.colorNeutralForeground1,
+                padding: "4px 8px",
               }}
             >
               {item.type === "user" ? <Person12Filled /> : <PeopleTeam16Filled />}{" "}

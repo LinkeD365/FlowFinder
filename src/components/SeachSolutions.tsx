@@ -3,7 +3,7 @@ import * as React from "react";
 
 import { SolutionMeta } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { Field, SearchBox } from "@fluentui/react-components";
+import { Field, SearchBox, tokens } from "@fluentui/react-components";
 
 type SearchSolutionProps = {
   dvSvc: dvService;
@@ -73,7 +73,7 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
     props.updateSelected(new SolutionMeta(name, uniqueName, id, managed));
   };
 
-    return (
+  return (
     <div style={{ position: "relative", width: "100%" }}>
       <Field>
         <SearchBox placeholder="Search..." value={query} onChange={(_, data) => setQuery(data.value)} />
@@ -87,11 +87,13 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
             right: 0,
             maxHeight: "200px",
             overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid #ccc",
+            backgroundColor: tokens.colorNeutralBackground1,
+            border: `1px solid ${tokens.colorNeutralStroke1}`,
             borderRadius: "4px",
             zIndex: 1000,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            boxShadow: `0 4px 8px ${tokens.colorNeutralShadowAmbient}`,
+            color: tokens.colorNeutralForeground1,
+            padding: "8px",
           }}
         >
           {loadingText || "Loading..."}
@@ -107,11 +109,11 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
             right: 0,
             maxHeight: "200px",
             overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid #ccc",
+            backgroundColor: tokens.colorNeutralBackground1,
+            border: `1px solid ${tokens.colorNeutralStroke1}`,
             borderRadius: "4px",
             zIndex: 1000,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            boxShadow: `0 4px 8px ${tokens.colorNeutralShadowAmbient}`,
           }}
         >
           {results.map((item) => (
@@ -120,9 +122,11 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
               onClick={() => handleSelectItem(item.id, item.name, item.uniqueName, item.managed)}
               style={{
                 cursor: "pointer",
-                backgroundColor: selectedItem === item.id ? "#f0f0f0" : "transparent",
+                backgroundColor: selectedItem === item.id ? tokens.colorNeutralBackground1Selected : "transparent",
                 display: "flex",
                 alignItems: "center",
+                color: tokens.colorNeutralForeground1,
+                padding: "4px 8px",
               }}
             >
               <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
