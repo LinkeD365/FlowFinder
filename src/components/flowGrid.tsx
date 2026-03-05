@@ -87,6 +87,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     {
       headerName: "Co-Owners",
       field: "coOwners",
+      autoHeight: true,
       cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
         return (
           <>
