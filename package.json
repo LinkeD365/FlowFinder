@@ -4,6 +4,7 @@
   "displayName": "FlowFinder",
   "description": "A Power Platform ToolBox tool to help you find and manage your Power Automate flows.",
   "main": "index.html",
+  "icon": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/assets/MCJ-Logo.svg",
   "contributors": [
     {
       "name": "LinkeD365",
@@ -17,8 +18,7 @@
   "configurations": {
     "repository": "https://github.com/LinkeD365/FlowFinder",
     "website": "",
-    "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/README.md",
-    "iconUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/assets/MCJ-Logo.svg"
+    "readmeUrl": "https://raw.githubusercontent.com/LinkeD365/FlowFinder/refs/heads/master/README.md"
   },
   "license": "MIT",
   "engines": {
