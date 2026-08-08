@@ -1,11 +1,12 @@
 import React from "react";
 
 import { observer } from "mobx-react";
-import { ViewModel } from "../model/viewModel";
+import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup, SearchBox } from "@fluentui/react-components";
+import { Combobox, Option, SearchBox, tokens, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
 import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
+import { FlowRunsGrid } from "./flowRunsGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
 
@@ -18,6 +19,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
   const { dvSvc, vm, onLog } = props;
   const [coownerOpen, SetCoownerOpen] = React.useState<boolean>(false);
   const [solutionOpen, SetSolutionOpen] = React.useState<boolean>(false);
+  const [runsFlow, setRunsFlow] = React.useState<FlowMeta | null>(null);
+  const [solutionQuery, setSolutionQuery] = React.useState<string>("");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
 
   React.useEffect(() => {
@@ -44,34 +47,57 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     }
   };
 
+  const normalizedSolutionQuery = solutionQuery.trim().toLocaleLowerCase();
+  const filteredSolutions = vm.solutions.filter((solution) =>
+    solution.name.toLocaleLowerCase().includes(normalizedSolutionQuery),
+  );
+  const showAllSolutions = "All Solutions".toLocaleLowerCase().includes(normalizedSolutionQuery);
+
   const toolBar = (
     <Toolbar
       aria-label="Medium"
       size="medium"
-      style={{ justifyContent: "space-between", zIndex: 10, position: "relative", marginBottom: 2 }}
+      style={{ justifyContent: "space-between", position: "relative", marginBottom: 2 }}
     >
       <ToolbarGroup>
-        <Combobox placeholder="Select a Solution" inlinePopup listbox={{ style: { zIndex: 20 } }}>
-          <Option
-            key="all-solutions"
-            text="All Solutions"
-            onClick={() => {
-              getAllFlows();
-            }}
-          >
-            All Solutions
-          </Option>
-          {vm.solutions.map((solution) => (
-            <Option
-              key={solution.id}
-              text={solution.name}
-              onClick={() => {
-                vm.selectedSolution = solution;
-              }}
-            >
+        <Combobox
+          placeholder="Select a Solution"
+          inlinePopup
+          listbox={{
+            style: {
+              zIndex: 1000,
+              backgroundColor: tokens.colorNeutralBackground1,
+              border: `1px solid ${tokens.colorNeutralStroke1}`,
+              boxShadow: tokens.shadow16,
+            },
+          }}
+          value={solutionQuery}
+          onChange={(event) => setSolutionQuery(event.target.value)}
+          onOptionSelect={(_, data) => {
+            if (data.optionValue === "all-solutions") {
+              setSolutionQuery("All Solutions");
+              void getAllFlows();
+              return;
+            }
+
+            const solution = vm.solutions.find((item) => item.id === data.optionValue);
+            if (solution) {
+              setSolutionQuery(solution.name);
+              vm.selectedSolution = solution;
+            }
+          }}
+        >
+          {showAllSolutions && (
+            <Option key="all-solutions" value="all-solutions" text="All Solutions">
+              All Solutions
+            </Option>
+          )}
+          {filteredSolutions.map((solution) => (
+            <Option key={solution.id} value={solution.id} text={solution.name}>
               {solution.name}
             </Option>
           ))}
+          {!showAllSolutions && filteredSolutions.length === 0 && <Option disabled>No matching solutions</Option>}
         </Combobox>
         <ToolbarButton aria-label="All Cloud Flows" onClick={getAllFlows}>
           All Cloud Flows
@@ -117,11 +143,21 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     }
   };
 
+  if (runsFlow) {
+    return <FlowRunsGrid flow={runsFlow} dvSvc={dvSvc} onBack={() => setRunsFlow(null)} onLog={onLog} />;
+  }
+
   return (
-    <div>
-      <div style={{ zIndex: 1 }}>{toolBar}</div>
-      <div>
-        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} />
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, width: "100%" }}>
+      <div style={{ position: "relative", zIndex: 100, flexShrink: 0 }}>{toolBar}</div>
+      <div style={{ position: "relative", zIndex: 0, flex: 1, minHeight: 0 }}>
+        <FlowGrid
+          vm={vm}
+          dvSvc={dvSvc}
+          onLog={onLog}
+          onViewRuns={setRunsFlow}
+          searchQuery={searchQuery}
+        />
       </div>
       {coownerOpen && (
         <CoOwnersDrawer
