@@ -4,10 +4,11 @@ import { observer } from "mobx-react";
 import { ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Combobox, Option, Toolbar, ToolbarButton, ToolbarGroup, SearchBox } from "@fluentui/react-components";
-import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
+import { PeopleLockFilled, BoxRegular, ArrowDownloadRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
+import { ExcelExportService } from "../services/excelExportService";
 
 interface FlowFinderProps {
   dvSvc: dvService;
@@ -16,6 +17,7 @@ interface FlowFinderProps {
 }
 export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element => {
   const { dvSvc, vm, onLog } = props;
+  const gridRef = React.useRef<any>(null);
   const [coownerOpen, SetCoownerOpen] = React.useState<boolean>(false);
   const [solutionOpen, SetSolutionOpen] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -41,6 +43,39 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
       onLog(`Fetched ${flows.length} flows`, "success");
     } catch (error) {
       onLog(`Error fetching flows: ${error}`, "error");
+    }
+  };
+
+  const handleExportToExcel = async () => {
+    try {
+      if (!gridRef.current?.api || vm.flows.length === 0) {
+        onLog("No flows to export", "warning");
+        return;
+      }
+
+      const columns = [
+        { field: "name", headerName: "Flow Name" },
+        { field: "description", headerName: "Description" },
+        { field: "ownerName", headerName: "Primary Owner" },
+        { field: "createdBy", headerName: "Created By" },
+        { field: "state", headerName: "State" },
+        { field: "type", headerName: "Type" },
+        { field: "category", headerName: "Category" },
+        { field: "solutions", headerName: "Solutions" },
+        { field: "coOwners", headerName: "Co-Owners" },
+      ];
+
+      await ExcelExportService.exportFlowsToExcel(vm.flows, columns, {
+        filename: `flowfinder_export_${new Date().toISOString().split("T")[0]}.xlsx`,
+        sheetName: "Flows",
+      });
+
+      onLog(
+        `Successfully exported ${vm.flows.length} flows to Excel`,
+        "success"
+      );
+    } catch (error) {
+      onLog(`Error exporting flows to Excel: ${error}`, "error");
     }
   };
 
@@ -98,6 +133,13 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         >
           Manage Solutions
         </ToolbarButton>
+        <ToolbarButton
+          icon={<ArrowDownloadRegular />}
+          onClick={handleExportToExcel}
+          disabled={vm.flows.length === 0}
+        >
+          Export to Excel
+        </ToolbarButton>
       </ToolbarGroup>
     </Toolbar>
   );
@@ -121,7 +163,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     <div>
       <div style={{ zIndex: 1 }}>{toolBar}</div>
       <div>
-        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} />
+        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} gridRef={gridRef} />
       </div>
       {coownerOpen && (
         <CoOwnersDrawer

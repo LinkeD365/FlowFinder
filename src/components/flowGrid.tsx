@@ -45,16 +45,18 @@ interface FlowGridProps {
   dvSvc: dvService;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
   searchQuery?: string;
+  gridRef?: React.RefObject<AgGridReact>;
 }
 
 export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
-  const { vm, dvSvc, onLog, searchQuery } = props;
+  const { vm, dvSvc, onLog, searchQuery, gridRef: externalGridRef } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
       mode: "singleRow",
     };
   }, []);
-  const gridRef = React.useRef<AgGridReact>(null);
+  const internalGridRef = React.useRef<AgGridReact>(null);
+  const gridRef = externalGridRef || internalGridRef;
 
   // Apply quick filter when search query changes
   React.useEffect(() => {
