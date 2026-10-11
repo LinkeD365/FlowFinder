@@ -20,9 +20,9 @@ import {
 import { AgGridReact, CustomCellRendererProps } from "ag-grid-react";
 import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
-import { PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
+import { History16Regular, Open16Regular, PeopleTeam16Filled, Person16Filled } from "@fluentui/react-icons";
 import { JsonViewer } from "./jsonViewer";
-import { Caption1 } from "@fluentui/react-components";
+import { Button, Caption1 } from "@fluentui/react-components";
 
 ModuleRegistry.registerModules([
   RowApiModule,
@@ -44,13 +44,14 @@ interface FlowGridProps {
   vm: ViewModel;
   dvSvc: dvService;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
+  onViewRuns: (flow: FlowMeta) => void;
   searchQuery?: string;
   gridRef?: React.RefObject<AgGridReact>;
   onLoadingDetailsChange?: (isLoading: boolean) => void;
 }
 
 export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
-  const { vm, dvSvc, onLog, searchQuery, gridRef: externalGridRef, onLoadingDetailsChange } = props;
+  const { vm, dvSvc, onLog, onViewRuns, searchQuery, gridRef: externalGridRef, onLoadingDetailsChange } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
       mode: "singleRow",
@@ -66,9 +67,75 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     }
   }, [searchQuery]);
 
+  const openFlow = async (flow: FlowMeta) => {
+    try {
+      const environmentId = await dvSvc.getEnvironmentId();
+      const flowUrl = `https://make.powerautomate.com/environments/${encodeURIComponent(environmentId)}/flows/${encodeURIComponent(flow.id)}/details`;
+      await window.toolboxAPI.utils.openInConnectionBrowser(flowUrl);
+    } catch (error) {
+      onLog(`Error opening flow: ${error}`, "error");
+    }
+  };
+
   const cols: ColDef<FlowMeta>[] = [
-    { field: "name", headerName: "Flow Name", minWidth: 200, flex: 2 },
-    { field: "description", headerName: "Description", minWidth: 250, autoHeight: true, flex: 2 },
+    {
+      headerName: "Open",
+      filter: false,
+      sortable: false,
+      width: 70,
+      minWidth: 70,
+      maxWidth: 70,
+      suppressSizeToFit: true,
+      getQuickFilterText: () => "",
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => (
+        <Button
+          appearance="subtle"
+          aria-label={`Open ${params.data?.name ?? "flow"} in browser`}
+          title="Open flow in browser"
+          icon={<Open16Regular />}
+          size="small"
+          disabled={!params.data}
+          onClick={() => params.data && void openFlow(params.data)}
+        />
+      ),
+    },
+    {
+      headerName: "Runs",
+      filter: false,
+      sortable: false,
+      width: 70,
+      minWidth: 70,
+      maxWidth: 70,
+      suppressSizeToFit: true,
+      getQuickFilterText: () => "",
+      cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => (
+        <Button
+          appearance="subtle"
+          aria-label={`View runs for ${params.data?.name ?? "flow"}`}
+          title="View flow runs"
+          icon={<History16Regular />}
+          size="small"
+          disabled={!params.data}
+          onClick={() => params.data && onViewRuns(params.data)}
+        />
+      ),
+    },
+    {
+      field: "name",
+      headerName: "Flow Name",
+      minWidth: 200,
+      flex: 2,
+      wrapText: false,
+      cellStyle: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+    },
+    {
+      field: "description",
+      headerName: "Description",
+      minWidth: 250,
+      flex: 2,
+      wrapText: false,
+      cellStyle: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+    },
 
     { field: "ownerName", headerName: "Primary Owner", minWidth: 150 },
     { field: "createdBy", headerName: "Created By", minWidth: 150 },
@@ -220,7 +287,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     onLog(`Selected ${selectedRows.length} flows`, "info");
   }
   return (
-    <div style={{ width: "100%", height: "85vh" }}>
+    <div style={{ width: "100%", height: "100%", minHeight: 0 }}>
       <AgGridReact<FlowMeta>
         ref={gridRef}
         suppressFieldDotNotation
