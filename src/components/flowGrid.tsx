@@ -81,7 +81,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
       field: "solutions",
       filter: false,
       cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
-        return <>{params.data?.solutions.map((sol) => sol.name).join(", ") ?? ""}</>;
+        return <>{params.data?.solutions.map((sol) => `${sol.name} (${sol.uniqueName})`).join(", ") ?? ""}</>;
       },
     },
     {

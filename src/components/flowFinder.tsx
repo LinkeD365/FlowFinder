@@ -64,12 +64,12 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
           {vm.solutions.map((solution) => (
             <Option
               key={solution.id}
-              text={solution.name}
+              text={`${solution.name} (${solution.uniqueName})`}
               onClick={() => {
                 vm.selectedSolution = solution;
               }}
             >
-              {solution.name}
+              {solution.name} ({solution.uniqueName})
             </Option>
           ))}
         </Combobox>
