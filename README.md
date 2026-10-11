@@ -2,8 +2,6 @@
 
 A Power Platform ToolBox tool to help you find, filter, and manage your Power Automate cloud flows at scale.
 
-> **Note:** This tool was developed with AI assistance. All code has been reviewed and tested by the maintainers.
-
 ## Features
 
 - 🔍 **View all Cloud Flows** - Display all cloud flows in your environment with detailed metadata
@@ -103,3 +101,5 @@ MIT
 ---
 
 **Maintainers:** LinkeD365 · Matt Collins-Jones
+
+> **Note:** This tool was developed with AI assistance. All code has been reviewed and tested by the maintainers.
