@@ -9,6 +9,7 @@ import { FlowGrid } from "./flowGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
 import { ExcelExportService } from "../services/excelExportService";
+import { EXPORT_COLUMNS } from "../config/columnConfig";
 
 interface FlowFinderProps {
   dvSvc: dvService;
@@ -21,6 +22,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
   const [coownerOpen, SetCoownerOpen] = React.useState<boolean>(false);
   const [solutionOpen, SetSolutionOpen] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     const fetchSolutions = async () => {
@@ -53,19 +55,12 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         return;
       }
 
-      const columns = [
-        { field: "name", headerName: "Flow Name" },
-        { field: "description", headerName: "Description" },
-        { field: "ownerName", headerName: "Primary Owner" },
-        { field: "createdBy", headerName: "Created By" },
-        { field: "state", headerName: "State" },
-        { field: "type", headerName: "Type" },
-        { field: "category", headerName: "Category" },
-        { field: "solutions", headerName: "Solutions" },
-        { field: "coOwners", headerName: "Co-Owners" },
-      ];
+      if (isLoadingDetails) {
+        onLog("Please wait - flow details are still loading", "warning");
+        return;
+      }
 
-      await ExcelExportService.exportFlowsToExcel(vm.flows, columns, {
+      await ExcelExportService.exportFlowsToExcel(vm.flows, EXPORT_COLUMNS, {
         filename: `flowfinder_export_${new Date().toISOString().split("T")[0]}.xlsx`,
         sheetName: "Flows",
       });
@@ -136,7 +131,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
         <ToolbarButton
           icon={<ArrowDownloadRegular />}
           onClick={handleExportToExcel}
-          disabled={vm.flows.length === 0}
+          disabled={vm.flows.length === 0 || isLoadingDetails}
         >
           Export to Excel
         </ToolbarButton>
@@ -163,7 +158,14 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
     <div>
       <div style={{ zIndex: 1 }}>{toolBar}</div>
       <div>
-        <FlowGrid vm={vm} dvSvc={dvSvc} onLog={onLog} searchQuery={searchQuery} gridRef={gridRef} />
+        <FlowGrid 
+          vm={vm} 
+          dvSvc={dvSvc} 
+          onLog={onLog} 
+          searchQuery={searchQuery} 
+          gridRef={gridRef}
+          onLoadingDetailsChange={setIsLoadingDetails}
+        />
       </div>
       {coownerOpen && (
         <CoOwnersDrawer

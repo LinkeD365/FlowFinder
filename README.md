@@ -6,9 +6,9 @@ A Power Platform ToolBox tool to help you find, filter, and manage your Power Au
 
 - 🔍 **View all Cloud Flows** - Display all cloud flows in your environment with detailed metadata
 - 👥 **Owner Management** - See flow owners and co-owners at a glance; add or remove co-owners directly from the tool
-- 📋 **Solution Management** - View which solution each flow belongs to; move flows between solutions
+- 📋 **Solution Management** - View which solutions each flow belongs to; add flows to additional solutions
 - 🏷️ **Advanced Filtering** - Filter flows by solution, owner, status, and other criteria
-- 📊 **Flow Metadata** - View flow descriptions, creation dates, modification dates, and status
+- 📊 **Flow Metadata** - View flow descriptions, status, and ownership information
 - 📖 **JSON Viewer** - Inspect the raw flow definition and client data in JSON format
 
 ## Requirements
@@ -18,8 +18,8 @@ A Power Platform ToolBox tool to help you find, filter, and manage your Power Au
 - **Permissions:**
   - Read access to `workflow` table (cloud flows)
   - Read access to `solution` table
-  - Read/Write access to `workflow.ownerid` for managing co-owners
-  - Read/Write access to `workflow.solutionid` for moving flows between solutions
+  - **Co-owner management:** Grant/Revoke access permissions for workflows
+  - **Solution management:** Add/Remove solution components
 - **Supported Browsers:** Chrome, Edge, Firefox (latest versions)
 - **Power Automate Cloud Flows Only** - Applies to cloud flows (instant, automated, scheduled), not desktop flows/RPA
 
@@ -51,8 +51,8 @@ A Power Platform ToolBox tool to help you find, filter, and manage your Power Au
 ### Managing Solutions
 
 1. Click the **"Update Solution"** button on a flow row
-2. Select the target solution from the dropdown
-3. The flow is moved to the selected solution
+2. Select a solution from the dropdown
+3. The flow is added to the selected solution
 
 ### Viewing Flow Details
 
@@ -62,8 +62,7 @@ A Power Platform ToolBox tool to help you find, filter, and manage your Power Au
 
 ## Known Limitations
 
-- **Large environments** - Initial load may take longer in environments with 1000+ flows
-- **Batch operations** - Flows are processed with a batch size of 2 to optimize performance
+- **Large environments** - Initial load may take longer in environments with 1000+ flows; concurrent loading of flow details is used to optimize performance
 - **Solution dropdown** - Only shows unmanaged solutions by default for most operations
 - **Managed solutions** - Managed solutions can be viewed but are read-only
 

@@ -42,6 +42,8 @@ export class ExcelExportService {
             .join("; ");
         } else if (col.field === "coOwners") {
           rowData[col.field] = flow.coOwners.map((owner) => owner.name).join("; ");
+        } else if (col.field === "isManagedFlow") {
+          rowData[col.field] = flow.solutions.some((sol) => sol.managed) ? "Yes" : "No";
         } else {
           rowData[col.field] = String((flow as any)[col.field] || "");
         }
