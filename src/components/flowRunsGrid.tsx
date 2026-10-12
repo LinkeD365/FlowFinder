@@ -294,7 +294,7 @@ export const FlowRunsGrid = (props: FlowRunsGridProps): React.JSX.Element => {
         await window.toolboxAPI.utils.openInConnectionBrowser(runUrl);
       } catch (openError) {
         const message = openError instanceof Error ? openError.message : String(openError);
-        onLog(`Error opening flow run: ${message}`, "error");
+        onLog(`Error opening flow run:  ${message}`, "error");
       }
     },
     [dvSvc, flow.id, onLog],
