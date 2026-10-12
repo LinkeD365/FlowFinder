@@ -5,15 +5,89 @@ interface dvServiceProps {
   dvApi: DataverseAPI.API;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
 }
+
+export interface FlowRunRecord {
+  flowrunid?: string;
+  partitionid?: string;
+  duration?: number | string;
+  endtime?: string;
+  errormessage?: string;
+  errorcode?: string;
+  status?: number | string;
+  starttime?: string;
+  triggertype?: number | string;
+  [key: string]: unknown;
+}
+
+export interface FlowRunPage {
+  records: FlowRunRecord[];
+  pagingCookie?: string;
+}
+
+const escapeXmlAttribute = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
 export class dvService {
   connection: ToolBoxAPI.DataverseConnection | null;
   dvApi: DataverseAPI.API;
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
   batchSize = 2;
+  private environmentId: string | null = null;
   constructor(props: dvServiceProps) {
     this.connection = props.connection;
     this.dvApi = props.dvApi;
     this.onLog = props.onLog;
+  }
+
+  async getEnvironmentId(): Promise<string> {
+    if (this.environmentId) {
+      return this.environmentId;
+    }
+
+    const organizationData = (await this.dvApi.queryData(
+      "RetrieveCurrentOrganization(AccessType=@p1)?@p1=Microsoft.Dynamics.CRM.EndpointAccessType'Default'",
+    )) as { Detail?: { EnvironmentId?: string } };
+    const environmentId = organizationData.Detail?.EnvironmentId;
+
+    if (!environmentId) {
+      throw new Error("Environment ID was not returned by Dataverse");
+    }
+
+    this.environmentId = environmentId;
+    return environmentId;
+  }
+
+  async getFlowRuns(flow: FlowMeta, page = 1, pagingCookie?: string): Promise<FlowRunPage> {
+    const pagingCookieAttribute = pagingCookie
+      ? ` paging-cookie="${escapeXmlAttribute(pagingCookie)}"`
+      : "";
+    const fetchXml = `<fetch count="500" page="${page}"${pagingCookieAttribute}>
+  <entity name="flowrun">
+    <attribute name="flowrunid" />
+    <attribute name="partitionid" />
+    <attribute name="duration" />
+    <attribute name="endtime" />
+    <attribute name="errormessage" />
+    <attribute name="errorcode" />
+    <attribute name="status" />
+    <attribute name="starttime" />
+    <attribute name="triggertype" />
+    <order attribute="starttime" descending="true" />
+    <filter type="and">
+      <condition attribute="workflowid" operator="eq" value="${flow.id}" />
+    </filter>
+  </entity>
+</fetch>`;
+
+    const response = await this.dvApi.fetchXmlQuery(fetchXml);
+    return {
+      records: response.value as FlowRunRecord[],
+      pagingCookie: response["@Microsoft.Dynamics.CRM.fetchxmlpagingcookie"],
+    };
   }
 
   async getSolutions(managed: boolean): Promise<SolutionMeta[]> {

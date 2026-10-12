@@ -161,7 +161,7 @@ export const SolutionsDrawer = observer((props: SolutionsDrawerProps): React.JSX
                     }}
                   >
                     <Caption1 style={{ overflow: "hidden", textOverflow: "ellipsis", marginLeft: "8px" }}>
-                      {solution.name}
+                      {solution.name} ({solution.uniqueName})
                     </Caption1>
                   </div>
                   <Button
