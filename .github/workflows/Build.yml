@@ -26,6 +26,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org
 
       - name: "Automated Version Bump"
         uses: "phips28/gh-action-bump-version@master"
@@ -36,4 +37,8 @@ jobs:
         run: |
           npm ci
           npm run build
-          npm publish --provenance
+
+      - name: Publish
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
