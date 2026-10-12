@@ -46,16 +46,19 @@ interface FlowGridProps {
   onLog: (message: string, type?: "info" | "success" | "warning" | "error") => void;
   onViewRuns: (flow: FlowMeta) => void;
   searchQuery?: string;
+  gridRef?: React.RefObject<AgGridReact>;
+  onLoadingDetailsChange?: (isLoading: boolean) => void;
 }
 
 export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
-  const { vm, dvSvc, onLog, onViewRuns, searchQuery } = props;
+  const { vm, dvSvc, onLog, onViewRuns, searchQuery, gridRef: externalGridRef, onLoadingDetailsChange } = props;
   const rowSelection = React.useMemo<RowSelectionOptions | "single" | "multiple">(() => {
     return {
       mode: "singleRow",
     };
   }, []);
-  const gridRef = React.useRef<AgGridReact>(null);
+  const internalGridRef = React.useRef<AgGridReact>(null);
+  const gridRef = externalGridRef || internalGridRef;
 
   // Apply quick filter when search query changes
   React.useEffect(() => {
@@ -148,7 +151,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
       field: "solutions",
       filter: false,
       cellRenderer: (params: CustomCellRendererProps<FlowMeta>) => {
-        return <>{params.data?.solutions.map((sol) => sol.name).join(", ") ?? ""}</>;
+        return <>{params.data?.solutions.map((sol) => `${sol.name} (${sol.uniqueName})`).join(", ") ?? ""}</>;
       },
     },
     {
@@ -210,30 +213,38 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     let cancelled = false;
 
     const fetchFlowDetails = async () => {
-      // Take a snapshot of the current flows to avoid issues if vm.flows mutates while we fetch.
-      const flowsSnapshot = [...vm.flows];
+      // Track loading state
+      onLoadingDetailsChange?.(true);
+      
+      try {
+        // Take a snapshot of the current flows to avoid issues if vm.flows mutates while we fetch.
+        const flowsSnapshot = [...vm.flows];
 
-      await Promise.all(
-        flowsSnapshot.map(async (flow) => {
-          try {
-            const [solutions, owners] = await Promise.all([dvSvc.getFlowSolutions(flow), dvSvc.getCoOwners(flow)]);
+        await Promise.all(
+          flowsSnapshot.map(async (flow) => {
+            try {
+              const [solutions, owners] = await Promise.all([dvSvc.getFlowSolutions(flow), dvSvc.getCoOwners(flow)]);
 
-            if (cancelled) {
-              return;
+              if (cancelled) {
+                return;
+              }
+
+              flow.solutions = solutions;
+              flow.coOwners = owners;
+
+              if (gridRef.current) {
+                const rowNode = gridRef.current.api.getRowNode(flow.id);
+                rowNode?.setData(flow);
+              }
+            } catch (error) {
+              console.error(`Error fetching details for flow ${flow.id}:`, error);
             }
-
-            flow.solutions = solutions;
-            flow.coOwners = owners;
-
-            if (gridRef.current) {
-              const rowNode = gridRef.current.api.getRowNode(flow.id);
-              rowNode?.setData(flow);
-            }
-          } catch (error) {
-            console.error(`Error fetching details for flow ${flow.id}:`, error);
-          }
-        }),
-      );
+          }),
+        );
+      } finally {
+        // Mark loading as complete
+        onLoadingDetailsChange?.(false);
+      }
     };
 
     if (vm.flows && vm.flows.length > 0) {
@@ -243,7 +254,7 @@ export const FlowGrid = observer((props: FlowGridProps): React.JSX.Element => {
     return () => {
       cancelled = true;
     };
-  }, [vm.flows]);
+  }, [vm.flows, onLoadingDetailsChange]);
 
   const NoRowsOverlay = () => <Caption1>No flows available</Caption1>;
   React.useEffect(() => {

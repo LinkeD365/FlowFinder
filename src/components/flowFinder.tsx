@@ -4,11 +4,13 @@ import { observer } from "mobx-react";
 import { FlowMeta, ViewModel } from "../model/viewModel";
 import { dvService } from "../services/dataverseService";
 import { Combobox, Option, SearchBox, tokens, Toolbar, ToolbarButton, ToolbarGroup } from "@fluentui/react-components";
-import { PeopleLockFilled, BoxRegular } from "@fluentui/react-icons";
+import { PeopleLockFilled, BoxRegular, ArrowDownloadRegular } from "@fluentui/react-icons";
 import { FlowGrid } from "./flowGrid";
 import { FlowRunsGrid } from "./flowRunsGrid";
 import { CoOwnersDrawer } from "./coOwnersDrawer";
 import { SolutionsDrawer } from "./solutionsDrawer";
+import { ExcelExportService } from "../services/excelExportService";
+import { EXPORT_COLUMNS } from "../config/columnConfig";
 
 interface FlowFinderProps {
   dvSvc: dvService;
@@ -17,11 +19,13 @@ interface FlowFinderProps {
 }
 export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element => {
   const { dvSvc, vm, onLog } = props;
+  const gridRef = React.useRef<any>(null);
   const [coownerOpen, SetCoownerOpen] = React.useState<boolean>(false);
   const [solutionOpen, SetSolutionOpen] = React.useState<boolean>(false);
   const [runsFlow, setRunsFlow] = React.useState<FlowMeta | null>(null);
   const [solutionQuery, setSolutionQuery] = React.useState<string>("");
   const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     const fetchSolutions = async () => {
@@ -44,6 +48,32 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
       onLog(`Fetched ${flows.length} flows`, "success");
     } catch (error) {
       onLog(`Error fetching flows: ${error}`, "error");
+    }
+  };
+
+  const handleExportToExcel = async () => {
+    try {
+      if (vm.flows.length === 0) {
+        onLog("No flows to export", "warning");
+        return;
+      }
+
+      if (isLoadingDetails) {
+        onLog("Please wait - flow details are still loading", "warning");
+        return;
+      }
+
+      await ExcelExportService.exportFlowsToExcel(vm.flows, EXPORT_COLUMNS, {
+        filename: `flowfinder_export_${new Date().toISOString().split("T")[0]}.xlsx`,
+        sheetName: "Flows",
+      });
+
+      onLog(
+        `Successfully exported ${vm.flows.length} flows to Excel`,
+        "success"
+      );
+    } catch (error) {
+      onLog(`Error exporting flows to Excel: ${error}`, "error");
     }
   };
 
@@ -82,7 +112,7 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
 
             const solution = vm.solutions.find((item) => item.id === data.optionValue);
             if (solution) {
-              setSolutionQuery(solution.name);
+              setSolutionQuery(`${solution.name} (${solution.uniqueName})`);
               vm.selectedSolution = solution;
             }
           }}
@@ -93,8 +123,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
             </Option>
           )}
           {filteredSolutions.map((solution) => (
-            <Option key={solution.id} value={solution.id} text={solution.name}>
-              {solution.name}
+            <Option key={solution.id} value={solution.id} text={`${solution.name} (${solution.uniqueName})`}>
+              {solution.name} ({solution.uniqueName})
             </Option>
           ))}
           {!showAllSolutions && filteredSolutions.length === 0 && <Option disabled>No matching solutions</Option>}
@@ -123,6 +153,13 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
           disabled={vm.selectedFlows?.length !== 1}
         >
           Manage Solutions
+        </ToolbarButton>
+        <ToolbarButton
+          icon={<ArrowDownloadRegular />}
+          onClick={handleExportToExcel}
+          disabled={vm.flows.length === 0 || isLoadingDetails}
+        >
+          Export to Excel
         </ToolbarButton>
       </ToolbarGroup>
     </Toolbar>
@@ -157,6 +194,8 @@ export const FlowFinder = observer((props: FlowFinderProps): React.JSX.Element =
           onLog={onLog}
           onViewRuns={setRunsFlow}
           searchQuery={searchQuery}
+          gridRef={gridRef}
+          onLoadingDetailsChange={setIsLoadingDetails}
         />
       </div>
       {coownerOpen && (

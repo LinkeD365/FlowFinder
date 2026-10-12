@@ -129,7 +129,9 @@ export const SearchSolution = observer((props: SearchSolutionProps): React.JSX.E
                 padding: "4px 8px",
               }}
             >
-              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</div>
+              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {item.name} ({item.uniqueName})
+              </div>
             </div>
           ))}
         </div>
